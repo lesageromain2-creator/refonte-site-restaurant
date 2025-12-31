@@ -1,9 +1,11 @@
 {
-  "name": "restaurant-backend",
+  "name": "restaurant-fullstack",
   "version": "1.0.0",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js"
+    "dev": "nodemon backend/server.js",
+    "build": "cd frontend && npm install && npm run build",
+    "postinstall": "cd frontend && npm install"
   },
   "dependencies": {
     "express": "^4.18.2",
