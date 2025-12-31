@@ -1,65 +1,59 @@
-// backend/server.js
-const express = require('express');
-const cors = require('cors');
-const session = require('express-session');
-const MySQLStore = require('express-mysql-session')(session);
 require('dotenv').config();
+const express = require('express');
+const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+const { Pool } = require('pg');
+const cors = require('cors');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Configuration PostgreSQL (Supabase)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Test de connexion
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ Erreur de connexion à la base:', err);
+  } else {
+    console.log('✅ Connecté à Supabase PostgreSQL');
+    release();
+  }
+});
+
+// Middleware CORS
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Configuration session
-const sessionStore = new MySQLStore({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME
-});
-
+// Configuration des sessions avec PostgreSQL
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'votre_secret_key',
-  store: sessionStore,
+  store: new pgSession({
+    pool: pool,
+    tableName: 'sessions'
+  }),
+  secret: process.env.SESSION_SECRET || 'votre-secret-dev',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24, // 24h
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production'
+    maxAge: 24 * 60 * 60 * 1000 // 24h
   }
 }));
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/dishes', require('./routes/dishes'));
-app.use('/api/categories', require('./routes/categories'));
-app.use('/api/menus', require('./routes/menus'));
-app.use('/api/reservations', require('./routes/reservations'));
-app.use('/api/settings', require('./routes/settings'));
-
-// Route de test
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'API fonctionnelle' });
-});
-
-// Gestion d'erreurs
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || 'Erreur serveur'
-  });
-});
+// Routes existantes...
+// (Garder toutes vos routes actuelles)
 
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
 });
-
-module.exports = app;
