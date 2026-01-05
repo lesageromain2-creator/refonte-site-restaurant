@@ -1,18 +1,78 @@
 // backend/routes/reservations.js
 const express = require('express');
-const { query, queryOne } = require('../../database/db');
+const { query, queryOne } = require('../database/db');
 
 const router = express.Router();
 
 // Middleware pour vérifier l'authentification
 const requireAuth = (req, res, next) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Non authentifié' });
+  console.log('🔒 requireAuth - Session complète:', {
+    sessionID: req.sessionID,
+    session: req.session,
+    userId: req.session?.userId,
+    role: req.session?.role,
+    cookie: req.session?.cookie
+  });
+
+  if (!req.session || !req.session.userId) {
+    console.log('❌ Authentification échouée - pas de session userId');
+    return res.status(401).json({ 
+      error: 'Non authentifié',
+      authenticated: false,
+      message: 'Vous devez être connecté pour effectuer cette action'
+    });
   }
+  
+  console.log('✅ Authentification réussie - userId:', req.session.userId);
   next();
 };
 
-// Créer une réservation
+// ============================================
+// VÉRIFIER LES DISPONIBILITÉS (PUBLIC)
+// ============================================
+router.post('/check-availability', async (req, res) => {
+  try {
+    const { reservation_date, reservation_time, number_of_people } = req.body;
+
+    if (!reservation_date || !reservation_time || !number_of_people) {
+      return res.status(400).json({ error: 'Paramètres manquants' });
+    }
+
+    // Déterminer le service (déjeuner ou dîner)
+    const hour = parseInt(reservation_time.split(':')[0]);
+    const isLunchTime = hour >= 12 && hour < 15;
+
+    const availabilityResult = await query(
+      `SELECT COALESCE(SUM(number_of_people), 0) as total_people
+       FROM reservations 
+       WHERE reservation_date = $1
+       AND reservation_time BETWEEN $2 AND $3
+       AND status IN ('confirmed', 'pending')`,
+      [
+        reservation_date,
+        isLunchTime ? '12:00:00' : '19:00:00',
+        isLunchTime ? '14:30:00' : '22:30:00'
+      ]
+    );
+
+    const totalPeople = parseInt(availabilityResult[0].total_people);
+    const availableSeats = 50 - totalPeople;
+    const isAvailable = availableSeats >= parseInt(number_of_people);
+
+    res.json({
+      available: isAvailable,
+      available_seats: availableSeats,
+      requested_seats: parseInt(number_of_people)
+    });
+  } catch (error) {
+    console.error('Erreur check availability:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ============================================
+// CRÉER UNE RÉSERVATION
+// ============================================
 router.post('/', requireAuth, async (req, res) => {
   try {
     const {
@@ -21,6 +81,9 @@ router.post('/', requireAuth, async (req, res) => {
       number_of_people,
       special_requests
     } = req.body;
+
+    console.log('📝 Création réservation pour user:', req.session.userId);
+    console.log('📋 Données reçues:', { reservation_date, reservation_time, number_of_people });
 
     // Validation
     if (!reservation_date || !reservation_time || !number_of_people) {
@@ -36,7 +99,7 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     // Vérifier que la date est future
-    const reservationDateTime = new Date(`${reservation_date} ${reservation_time}`);
+    const reservationDateTime = new Date(`${reservation_date}T${reservation_time}`);
     if (reservationDateTime < new Date()) {
       return res.status(400).json({ 
         error: 'La date de réservation doit être future' 
@@ -44,14 +107,13 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     // Vérifier les horaires d'ouverture (12h-14h30, 19h-22h30)
-    const hour = parseInt(reservation_time.split(':')[0]);
-    const minute = parseInt(reservation_time.split(':')[1]);
+    const [hour, minute] = reservation_time.split(':').map(Number);
     const timeInMinutes = hour * 60 + minute;
 
-    const lunchStart = 12 * 60; // 12h00
-    const lunchEnd = 14 * 60 + 30; // 14h30
-    const dinnerStart = 19 * 60; // 19h00
-    const dinnerEnd = 22 * 60 + 30; // 22h30
+    const lunchStart = 12 * 60;
+    const lunchEnd = 14 * 60 + 30;
+    const dinnerStart = 19 * 60;
+    const dinnerEnd = 22 * 60 + 30;
 
     const isLunchTime = timeInMinutes >= lunchStart && timeInMinutes <= lunchEnd;
     const isDinnerTime = timeInMinutes >= dinnerStart && timeInMinutes <= dinnerEnd;
@@ -63,12 +125,12 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     // Vérifier la disponibilité (max 50 personnes par service)
-    const [{ total_people }] = await query(
+    const availabilityResult = await query(
       `SELECT COALESCE(SUM(number_of_people), 0) as total_people
        FROM reservations 
-       WHERE reservation_date = ? 
-       AND reservation_time BETWEEN ? AND ?
-       AND status = 'confirmed'`,
+       WHERE reservation_date = $1
+       AND reservation_time BETWEEN $2 AND $3
+       AND status IN ('confirmed', 'pending')`,
       [
         reservation_date,
         isLunchTime ? '12:00:00' : '19:00:00',
@@ -76,56 +138,79 @@ router.post('/', requireAuth, async (req, res) => {
       ]
     );
 
-    if (parseInt(total_people) + parseInt(number_of_people) > 50) {
+    const totalPeople = parseInt(availabilityResult[0].total_people);
+
+    if (totalPeople + parseInt(number_of_people) > 50) {
       return res.status(400).json({ 
-        error: 'Plus de disponibilité pour ce créneau' 
+        error: 'Plus de disponibilité pour ce créneau',
+        available_seats: 50 - totalPeople
       });
     }
 
     // Créer la réservation
     const result = await query(
       `INSERT INTO reservations 
-       (id_user, reservation_date, reservation_time, number_of_people, special_requests, status, created_at) 
-       VALUES (?, ?, ?, ?, ?, 'pending', NOW())`,
-      [req.session.userId, reservation_date, reservation_time, number_of_people, special_requests]
+       (user_id, reservation_date, reservation_time, number_of_people, special_requests, status) 
+       VALUES ($1, $2, $3, $4, $5, 'pending')
+       RETURNING id, user_id, reservation_date, reservation_time, number_of_people, status, created_at`,
+      [req.session.userId, reservation_date, reservation_time, number_of_people, special_requests || null]
     );
 
+    console.log('✅ Réservation créée:', result[0]);
+
     res.status(201).json({
+      success: true,
       message: 'Réservation créée avec succès',
-      id_reservation: result.insertId,
-      status: 'pending'
+      reservation: result[0]
     });
   } catch (error) {
-    console.error('Erreur create reservation:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur create reservation:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erreur serveur lors de la création de la réservation' 
+    });
   }
 });
 
-// Récupérer les réservations de l'utilisateur connecté
+// ============================================
+// RÉCUPÉRER LES RÉSERVATIONS DE L'UTILISATEUR
+// ============================================
 router.get('/my', requireAuth, async (req, res) => {
   try {
+    console.log('📋 Récupération réservations pour user:', req.session.userId);
+    
     const reservations = await query(
       `SELECT * FROM reservations 
-       WHERE id_user = ? 
+       WHERE user_id = $1 
        ORDER BY reservation_date DESC, reservation_time DESC`,
       [req.session.userId]
     );
 
-    res.json({ reservations });
+    console.log(`✅ ${reservations.length} réservations trouvées`);
+
+    res.json({ 
+      success: true,
+      reservations 
+    });
   } catch (error) {
-    console.error('Erreur get my reservations:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur get my reservations:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erreur serveur' 
+    });
   }
 });
 
-// Récupérer une réservation par ID
+// ============================================
+// RÉCUPÉRER UNE RÉSERVATION PAR ID
+// ============================================
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const reservation = await queryOne(
-      `SELECT r.*, u.firstname, u.lastname, u.email
+      `SELECT r.*, u.firstname, u.lastname, u.email, u.phone
        FROM reservations r
-       JOIN users u ON r.id_user = u.id_user
-       WHERE r.id_reservation = ?`,
+       JOIN users u ON r.user_id = u.id
+       WHERE r.id = $1`,
       [req.params.id]
     );
 
@@ -134,22 +219,30 @@ router.get('/:id', requireAuth, async (req, res) => {
     }
 
     // Vérifier que l'utilisateur est le propriétaire ou admin
-    if (reservation.id_user !== req.session.userId && req.session.role !== 'admin') {
+    if (reservation.user_id !== req.session.userId && req.session.role !== 'admin') {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
-    res.json(reservation);
+    res.json({
+      success: true,
+      reservation
+    });
   } catch (error) {
-    console.error('Erreur get reservation:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur get reservation:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erreur serveur' 
+    });
   }
 });
 
-// Annuler une réservation
+// ============================================
+// ANNULER UNE RÉSERVATION
+// ============================================
 router.put('/:id/cancel', requireAuth, async (req, res) => {
   try {
     const reservation = await queryOne(
-      'SELECT * FROM reservations WHERE id_reservation = ?',
+      'SELECT * FROM reservations WHERE id = $1',
       [req.params.id]
     );
 
@@ -158,7 +251,7 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
     }
 
     // Vérifier que l'utilisateur est le propriétaire
-    if (reservation.id_user !== req.session.userId && req.session.role !== 'admin') {
+    if (reservation.user_id !== req.session.userId && req.session.role !== 'admin') {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
@@ -168,7 +261,7 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
     }
 
     // Vérifier que la réservation est au moins 2h dans le futur
-    const reservationDateTime = new Date(`${reservation.reservation_date} ${reservation.reservation_time}`);
+    const reservationDateTime = new Date(`${reservation.reservation_date}T${reservation.reservation_time}`);
     const twoHoursFromNow = new Date(Date.now() + 2 * 60 * 60 * 1000);
 
     if (reservationDateTime < twoHoursFromNow) {
@@ -178,18 +271,26 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
     }
 
     await query(
-      'UPDATE reservations SET status = ?, cancelled_at = NOW() WHERE id_reservation = ?',
+      'UPDATE reservations SET status = $1, cancelled_at = CURRENT_TIMESTAMP WHERE id = $2',
       ['cancelled', req.params.id]
     );
 
-    res.json({ message: 'Réservation annulée avec succès' });
+    res.json({ 
+      success: true,
+      message: 'Réservation annulée avec succès' 
+    });
   } catch (error) {
-    console.error('Erreur cancel reservation:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur cancel reservation:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erreur serveur' 
+    });
   }
 });
 
-// Récupérer toutes les réservations (admin uniquement)
+// ============================================
+// ADMIN: RÉCUPÉRER TOUTES LES RÉSERVATIONS
+// ============================================
 router.get('/admin/all', requireAuth, async (req, res) => {
   try {
     if (req.session.role !== 'admin') {
@@ -198,35 +299,46 @@ router.get('/admin/all', requireAuth, async (req, res) => {
 
     const { date, status } = req.query;
     let sql = `
-      SELECT r.*, u.firstname, u.lastname, u.email
+      SELECT r.*, u.firstname, u.lastname, u.email, u.phone
       FROM reservations r
-      JOIN users u ON r.id_user = u.id_user
+      JOIN users u ON r.user_id = u.id
       WHERE 1=1
     `;
     const params = [];
+    let paramIndex = 1;
 
     if (date) {
-      sql += ' AND r.reservation_date = ?';
+      sql += ` AND r.reservation_date = $${paramIndex}`;
       params.push(date);
+      paramIndex++;
     }
 
     if (status) {
-      sql += ' AND r.status = ?';
+      sql += ` AND r.status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
 
     sql += ' ORDER BY r.reservation_date DESC, r.reservation_time DESC';
 
     const reservations = await query(sql, params);
 
-    res.json({ reservations });
+    res.json({ 
+      success: true,
+      reservations 
+    });
   } catch (error) {
-    console.error('Erreur get all reservations:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur get all reservations:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erreur serveur' 
+    });
   }
 });
 
-// Confirmer une réservation (admin uniquement)
+// ============================================
+// ADMIN: CONFIRMER UNE RÉSERVATION
+// ============================================
 router.put('/:id/confirm', requireAuth, async (req, res) => {
   try {
     if (req.session.role !== 'admin') {
@@ -234,54 +346,20 @@ router.put('/:id/confirm', requireAuth, async (req, res) => {
     }
 
     await query(
-      'UPDATE reservations SET status = ? WHERE id_reservation = ?',
+      'UPDATE reservations SET status = $1 WHERE id = $2',
       ['confirmed', req.params.id]
     );
 
-    res.json({ message: 'Réservation confirmée avec succès' });
-  } catch (error) {
-    console.error('Erreur confirm reservation:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Vérifier les disponibilités pour une date/heure
-router.post('/check-availability', async (req, res) => {
-  try {
-    const { reservation_date, reservation_time, number_of_people } = req.body;
-
-    if (!reservation_date || !reservation_time || !number_of_people) {
-      return res.status(400).json({ error: 'Paramètres manquants' });
-    }
-
-    // Déterminer le service (déjeuner ou dîner)
-    const hour = parseInt(reservation_time.split(':')[0]);
-    const isLunchTime = hour >= 12 && hour < 15;
-
-    const [{ total_people }] = await query(
-      `SELECT COALESCE(SUM(number_of_people), 0) as total_people
-       FROM reservations 
-       WHERE reservation_date = ? 
-       AND reservation_time BETWEEN ? AND ?
-       AND status = 'confirmed'`,
-      [
-        reservation_date,
-        isLunchTime ? '12:00:00' : '19:00:00',
-        isLunchTime ? '14:30:00' : '22:30:00'
-      ]
-    );
-
-    const available_seats = 50 - parseInt(total_people);
-    const is_available = available_seats >= parseInt(number_of_people);
-
-    res.json({
-      available: is_available,
-      available_seats,
-      requested_seats: parseInt(number_of_people)
+    res.json({ 
+      success: true,
+      message: 'Réservation confirmée avec succès' 
     });
   } catch (error) {
-    console.error('Erreur check availability:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur confirm reservation:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Erreur serveur' 
+    });
   }
 });
 

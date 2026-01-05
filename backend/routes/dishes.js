@@ -1,6 +1,6 @@
 // backend/routes/dishes.js
 const express = require('express');
-const { query, queryOne } = require('../../database/db');
+//const { query, queryOne } = require('../../database/db');
 
 const router = express.Router();
 
