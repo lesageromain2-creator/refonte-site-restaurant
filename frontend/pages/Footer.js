@@ -1,247 +1,120 @@
 // frontend/components/Footer.js
 import Link from 'next/link';
-import { useEffect } from 'react';
-import anime from 'animejs';
 
-export default function Footer({ settings }) {
-  useEffect(() => {
-    // Animation au scroll
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            anime({
-              targets: '.footer-section',
-              opacity: [0, 1],
-              translateY: [30, 0],
-              delay: anime.stagger(100),
-              duration: 800,
-              easing: 'easeOutExpo'
-            });
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    const footer = document.querySelector('.site-footer');
-    if (footer) observer.observe(footer);
-
-    return () => observer.disconnect();
-  }, []);
-
-  const siteName = settings.site_name || 'Restaurant Gourmet';
-  const sitePhone = settings.site_phone || '';
-  const siteEmail = settings.site_email || '';
-  const siteAddress = settings.site_address || '';
-  const footerText = settings.footer_text || '';
-  const copyrightText = settings.copyright_text || `© ${new Date().getFullYear()} - Tous droits réservés`;
-  
-  const facebookUrl = settings.facebook_url || '';
-  const instagramUrl = settings.instagram_url || '';
-  const twitterUrl = settings.twitter_url || '';
+export default function Footer({ settings = {} }) {
+  const currentYear = new Date().getFullYear();
+  const siteName = settings.site_name || 'Restaurant';
+  const phoneNumber = settings.phone_number || 'Non renseigné';
+  const email = settings.email || 'contact@restaurant.fr';
+  const address = settings.address || 'Adresse non renseignée';
 
   return (
-    <footer className="site-footer">
-      <div className="footer-content">
-        <div className="footer-grid">
-          {/* À propos */}
+    <>
+      <footer className="footer">
+        <div className="footer-container">
+          
+          {/* Section 1 : Nom du site */}
           <div className="footer-section">
             <h3>🍽️ {siteName}</h3>
-            <p>{footerText || 'Découvrez une expérience culinaire unique dans notre restaurant.'}</p>
-            {(facebookUrl || instagramUrl || twitterUrl) && (
-              <div className="social-links">
-                {facebookUrl && (
-                  <a href={facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                    <i className="bi bi-facebook"></i>
-                  </a>
-                )}
-                {instagramUrl && (
-                  <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                    <i className="bi bi-instagram"></i>
-                  </a>
-                )}
-                {twitterUrl && (
-                  <a href={twitterUrl} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-                    <i className="bi bi-twitter"></i>
-                  </a>
-                )}
-              </div>
-            )}
+            <p>{settings.site_description || 'Bienvenue dans notre restaurant'}</p>
           </div>
 
-          {/* Navigation rapide */}
+          {/* Section 2 : Navigation */}
           <div className="footer-section">
-            <h3>Navigation</h3>
-            <Link href="/"><a>Accueil</a></Link>
-            <Link href="/categories"><a>Notre Carte</a></Link>
-            <Link href="/menus"><a>Menus</a></Link>
-            <Link href="/reservation"><a>Réservation</a></Link>
-            <Link href="/about"><a>À propos</a></Link>
-            <Link href="/search"><a>Rechercher</a></Link>
+            <h4>Navigation</h4>
+            <ul className="footer-links">
+              <li><Link href="/">Accueil</Link></li>
+              <li><Link href="/categories">Carte</Link></li>
+              <li><Link href="/menus">Menus</Link></li>
+              <li><Link href="/reservation">Réserver</Link></li>
+            </ul>
           </div>
 
-          {/* Contact */}
+          {/* Section 3 : Contact */}
           <div className="footer-section">
-            <h3>Contact</h3>
-            {siteAddress && (
-              <p>
-                <i className="bi bi-geo-alt"></i> {siteAddress}
-              </p>
-            )}
-            {sitePhone && (
-              <p>
-                <i className="bi bi-telephone"></i> {sitePhone}
-              </p>
-            )}
-            {siteEmail && (
-              <p>
-                <i className="bi bi-envelope"></i> {siteEmail}
-              </p>
-            )}
+            <h4>Contact</h4>
+            <ul className="footer-contact">
+              <li>📍 {address}</li>
+              <li>📞 {phoneNumber}</li>
+              <li>✉️ {email}</li>
+            </ul>
           </div>
 
-          {/* Horaires */}
+          {/* Section 4 : Horaires */}
           <div className="footer-section">
-            <h3>Horaires d'ouverture</h3>
-            <p>Lundi - Vendredi: 12h - 14h30, 19h - 22h30</p>
-            <p>Samedi: 19h - 23h</p>
-            <p>Dimanche: Fermé</p>
+            <h4>Horaires</h4>
+            <p>{settings.opening_hours || 'Voir nos horaires'}</p>
           </div>
         </div>
 
-        {/* Copyright */}
         <div className="footer-bottom">
-          <p>{copyrightText}</p>
-          <p className="footer-credits">
-            Développé avec ❤️ | <Link href="/mentions-legales"><a>Mentions légales</a></Link> | 
-            <Link href="/politique-confidentialite"><a> Politique de confidentialité</a></Link>
-          </p>
+          <p>&copy; {currentYear} {siteName}. Tous droits réservés.</p>
         </div>
-      </div>
+      </footer>
 
       <style jsx>{`
-        .site-footer {
+        .footer {
           background: #2c3e50;
           color: white;
-          padding: 50px 20px 30px;
-          margin-top: 60px;
+          padding: 60px 20px 20px;
+          margin-top: 80px;
         }
 
-        .footer-content {
+        .footer-container {
           max-width: 1400px;
           margin: 0 auto;
-        }
-
-        .footer-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
           gap: 40px;
           margin-bottom: 40px;
         }
 
-        .footer-section {
-          opacity: 0;
-        }
-
         .footer-section h3 {
-          color: #e74c3c;
-          margin-bottom: 20px;
-          font-size: 1.3em;
-          font-weight: 700;
+          font-size: 1.8em;
+          margin-bottom: 15px;
         }
 
-        .footer-section p,
-        .footer-section a {
-          color: rgba(255,255,255,0.8);
-          line-height: 1.8;
-          text-decoration: none;
-          display: block;
+        .footer-section h4 {
+          font-size: 1.3em;
+          margin-bottom: 15px;
+          color: #e74c3c;
+        }
+
+        .footer-links,
+        .footer-contact {
+          list-style: none;
+          padding: 0;
+        }
+
+        .footer-links li,
+        .footer-contact li {
           margin-bottom: 10px;
-          transition: all 0.3s;
         }
 
-        .footer-section a:hover {
+        .footer-links a {
           color: white;
-          transform: translateX(5px);
+          text-decoration: none;
+          transition: color 0.3s;
         }
 
-        .footer-section p i {
-          margin-right: 10px;
+        .footer-links a:hover {
           color: #e74c3c;
-        }
-
-        .social-links {
-          display: flex;
-          gap: 15px;
-          margin-top: 20px;
-        }
-
-        .social-links a {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 45px;
-          height: 45px;
-          background: rgba(255,255,255,0.1);
-          border-radius: 50%;
-          color: white;
-          font-size: 1.3em;
-          transition: all 0.3s;
-          margin-bottom: 0;
-        }
-
-        .social-links a:hover {
-          background: #e74c3c;
-          transform: translateY(-5px) scale(1.1);
         }
 
         .footer-bottom {
           text-align: center;
           padding-top: 30px;
-          border-top: 1px solid rgba(255,255,255,0.1);
-          color: rgba(255,255,255,0.6);
-        }
-
-        .footer-bottom p {
-          margin-bottom: 10px;
-        }
-
-        .footer-credits {
-          font-size: 0.9em;
-        }
-
-        .footer-credits a {
-          color: rgba(255,255,255,0.6);
-          text-decoration: none;
-          transition: color 0.3s;
-          display: inline;
-        }
-
-        .footer-credits a:hover {
-          color: #e74c3c;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          opacity: 0.8;
         }
 
         @media (max-width: 768px) {
-          .site-footer {
-            padding: 40px 20px 20px;
-          }
-
-          .footer-grid {
+          .footer-container {
             grid-template-columns: 1fr;
-            gap: 30px;
-          }
-
-          .footer-section h3 {
-            font-size: 1.1em;
-          }
-
-          .social-links {
-            justify-content: center;
+            text-align: center;
           }
         }
       `}</style>
-    </footer>
+    </>
   );
 }

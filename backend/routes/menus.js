@@ -1,182 +1,347 @@
-// backend/routes/menus.js
 const express = require('express');
-const { query, queryOne } = require('../../database/db');
-
 const router = express.Router();
+const pool = require('../database/db');
 
-// Récupérer tous les menus
+/**
+ * GET /api/menus
+ * Récupère tous les menus actifs avec leurs plats
+ */
 router.get('/', async (req, res) => {
   try {
-    const { limit = 20, available = true } = req.query;
+    console.log('📋 Récupération de tous les menus...');
+    
+    const menusQuery = `
+      SELECT 
+        m.id_menu,
+        m.title,
+        m.description,
+        m.price,
+        m.image,
+        m.menu_type,
+        m.is_active,
+        m.available_from,
+        m.available_until,
+        m.display_order
+      FROM menus m
+      WHERE m.is_active = true
+        AND (m.available_from IS NULL OR m.available_from <= CURRENT_DATE)
+        AND (m.available_until IS NULL OR m.available_until >= CURRENT_DATE)
+      ORDER BY m.display_order ASC, m.title ASC
+    `;
 
-    let sql = 'SELECT * FROM menus WHERE 1=1';
-    const params = [];
+    const menusResult = await pool.query(menusQuery);
+    
+    // Le résultat est directement le tableau, pas result.rows
+    const menus = Array.isArray(menusResult) ? menusResult : [];
+    
+    console.log(`✅ ${menus.length} menus trouvés`);
 
-    if (available === 'true' || available === true) {
-      sql += ' AND (available_date IS NULL OR available_date >= CURDATE())';
+    // Si aucun menu, retourner un tableau vide
+    if (menus.length === 0) {
+      return res.json({
+        success: true,
+        menus: []
+      });
     }
 
-    sql += ' ORDER BY created_at DESC LIMIT ?';
-    params.push(parseInt(limit));
+    // Pour chaque menu, récupérer les plats associés
+    const menusWithDishes = await Promise.all(
+      menus.map(async (menu) => {
+        const dishesQuery = `
+          SELECT 
+            d.id_dish,
+            d.name,
+            d.description,
+            d.price as dish_price,
+            d.image_url,
+            d.allergens,
+            d.is_vegetarian,
+            d.is_vegan,
+            d.is_gluten_free,
+            d.course_type,
+            md.course_order,
+            md.is_optional,
+            c.name as category_name
+          FROM menu_dishes md
+          JOIN dishes d ON md.dish_id = d.id_dish
+          LEFT JOIN categories c ON d.category_id = c.id_category
+          WHERE md.menu_id = $1
+            AND d.is_available = true
+          ORDER BY md.course_order ASC
+        `;
 
-    const menus = await query(sql, params);
+        const dishesResult = await pool.query(dishesQuery, [menu.id_menu]);
+        const dishes = Array.isArray(dishesResult) ? dishesResult : [];
 
-    // Compter le total
-    const [{ total }] = await query(
-      'SELECT COUNT(*) as total FROM menus WHERE available_date IS NULL OR available_date >= CURDATE()'
+        return {
+          ...menu,
+          dishes: dishes,
+          dish_count: dishes.length
+        };
+      })
     );
 
     res.json({
-      menus,
-      total
+      success: true,
+      menus: menusWithDishes
     });
   } catch (error) {
-    console.error('Erreur get menus:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur récupération menus:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des menus',
+      error: error.message
+    });
   }
 });
 
-// Récupérer un menu par ID
+/**
+ * GET /api/menus/dishes/all
+ * Récupère tous les plats disponibles
+ */
+router.get('/dishes/all', async (req, res) => {
+  try {
+    const dishesQuery = `
+      SELECT 
+        d.id_dish,
+        d.name,
+        d.description,
+        d.price,
+        d.image_url,
+        d.allergens,
+        d.is_vegetarian,
+        d.is_vegan,
+        d.is_gluten_free,
+        d.course_type,
+        d.preparation_time,
+        c.name as category_name,
+        c.icon as category_icon
+      FROM dishes d
+      LEFT JOIN categories c ON d.category_id = c.id_category
+      WHERE d.is_available = true
+      ORDER BY c.display_order ASC, d.name ASC
+    `;
+
+    const result = await pool.query(dishesQuery);
+    const dishes = Array.isArray(result) ? result : [];
+
+    res.json({
+      success: true,
+      dishes: dishes
+    });
+  } catch (error) {
+    console.error('Erreur récupération plats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des plats'
+    });
+  }
+});
+
+/**
+ * GET /api/menus/dishes/category/:categoryId
+ * Récupère les plats d'une catégorie spécifique
+ */
+router.get('/dishes/category/:categoryId', async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    const dishesQuery = `
+      SELECT 
+        d.id_dish,
+        d.name,
+        d.description,
+        d.price,
+        d.image_url,
+        d.allergens,
+        d.is_vegetarian,
+        d.is_vegan,
+        d.is_gluten_free,
+        d.course_type
+      FROM dishes d
+      WHERE d.category_id = $1
+        AND d.is_available = true
+      ORDER BY d.name ASC
+    `;
+
+    const result = await pool.query(dishesQuery, [categoryId]);
+    const dishes = Array.isArray(result) ? result : [];
+
+    res.json({
+      success: true,
+      dishes: dishes
+    });
+  } catch (error) {
+    console.error('Erreur récupération plats par catégorie:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des plats'
+    });
+  }
+});
+
+/**
+ * GET /api/menus/categories/all
+ * Récupère toutes les catégories actives
+ */
+router.get('/categories/all', async (req, res) => {
+  try {
+    const categoriesQuery = `
+      SELECT 
+        c.id_category,
+        c.name,
+        c.description,
+        c.icon,
+        c.display_order,
+        COUNT(d.id_dish) as dish_count
+      FROM categories c
+      LEFT JOIN dishes d ON c.id_category = d.category_id AND d.is_available = true
+      WHERE c.is_active = true
+      GROUP BY c.id_category
+      ORDER BY c.display_order ASC
+    `;
+
+    const result = await pool.query(categoriesQuery);
+    const categories = Array.isArray(result) ? result : [];
+
+    res.json({
+      success: true,
+      categories: categories
+    });
+  } catch (error) {
+    console.error('Erreur récupération catégories:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des catégories'
+    });
+  }
+});
+
+/**
+ * GET /api/menus/type/:type
+ * Récupère les menus par type (standard, seasonal, special, tasting, chef)
+ */
+router.get('/type/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+
+    const menusQuery = `
+      SELECT 
+        m.id_menu,
+        m.title,
+        m.description,
+        m.price,
+        m.image,
+        m.menu_type,
+        m.display_order
+      FROM menus m
+      WHERE m.is_active = true
+        AND m.menu_type = $1
+        AND (m.available_from IS NULL OR m.available_from <= CURRENT_DATE)
+        AND (m.available_until IS NULL OR m.available_until >= CURRENT_DATE)
+      ORDER BY m.display_order ASC
+    `;
+
+    const result = await pool.query(menusQuery, [type]);
+    const menus = Array.isArray(result) ? result : [];
+
+    res.json({
+      success: true,
+      menus: menus
+    });
+  } catch (error) {
+    console.error('Erreur récupération menus par type:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des menus'
+    });
+  }
+});
+
+/**
+ * GET /api/menus/:id
+ * Récupère un menu spécifique avec tous ses détails
+ */
 router.get('/:id', async (req, res) => {
   try {
-    const menu = await queryOne(
-      'SELECT * FROM menus WHERE id_menu = ?',
-      [req.params.id]
-    );
+    const { id } = req.params;
+    
+    console.log(`📋 Récupération du menu ${id}...`);
 
-    if (!menu) {
-      return res.status(404).json({ error: 'Menu non trouvé' });
+    // Récupérer le menu
+    const menuQuery = `
+      SELECT 
+        m.id_menu,
+        m.title,
+        m.description,
+        m.price,
+        m.image,
+        m.menu_type,
+        m.is_active,
+        m.available_from,
+        m.available_until,
+        m.display_order,
+        m.created_at
+      FROM menus m
+      WHERE m.id_menu = $1 AND m.is_active = true
+    `;
+
+    const menuResult = await pool.query(menuQuery, [id]);
+    const menus = Array.isArray(menuResult) ? menuResult : [];
+
+    if (menus.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Menu non trouvé'
+      });
     }
 
-    // Récupérer les plats du menu
-    const dishes = await query(
-      `SELECT d.*, md.course_order, md.course_type
-       FROM menu_dishes md
-       JOIN dishes d ON md.id_dish = d.id_dish
-       WHERE md.id_menu = ?
-       ORDER BY md.course_order ASC`,
-      [req.params.id]
-    );
+    const menu = menus[0];
 
-    menu.dishes = dishes;
+    // Récupérer les plats du menu groupés par type de plat
+    const dishesQuery = `
+      SELECT 
+        d.id_dish,
+        d.name,
+        d.description,
+        d.price as dish_price,
+        d.image_url,
+        d.allergens,
+        d.is_vegetarian,
+        d.is_vegan,
+        d.is_gluten_free,
+        d.course_type,
+        d.preparation_time,
+        d.calories,
+        md.course_order,
+        md.is_optional,
+        c.name as category_name,
+        c.icon as category_icon
+      FROM menu_dishes md
+      JOIN dishes d ON md.dish_id = d.id_dish
+      LEFT JOIN categories c ON d.category_id = c.id_category
+      WHERE md.menu_id = $1
+        AND d.is_available = true
+      ORDER BY md.course_order ASC
+    `;
 
-    res.json(menu);
-  } catch (error) {
-    console.error('Erreur get menu:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
+    const dishesResult = await pool.query(dishesQuery, [id]);
+    const dishes = Array.isArray(dishesResult) ? dishesResult : [];
+    
+    console.log(`✅ Menu trouvé avec ${dishes.length} plats`);
 
-// Créer un menu (admin uniquement)
-router.post('/', async (req, res) => {
-  try {
-    if (!req.session.userId || req.session.role !== 'admin') {
-      return res.status(403).json({ error: 'Accès refusé' });
-    }
-
-    const { title, description, price, available_date, image } = req.body;
-
-    if (!title || !price) {
-      return res.status(400).json({ error: 'Titre et prix requis' });
-    }
-
-    const result = await query(
-      `INSERT INTO menus (title, description, price, available_date, image, created_at) 
-       VALUES (?, ?, ?, ?, ?, NOW())`,
-      [title, description, price, available_date, image]
-    );
-
-    res.status(201).json({
-      message: 'Menu créé avec succès',
-      id_menu: result.insertId
+    res.json({
+      success: true,
+      ...menu,
+      dishes: dishes,
+      dish_count: dishes.length
     });
   } catch (error) {
-    console.error('Erreur create menu:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Ajouter un plat à un menu (admin uniquement)
-router.post('/:id/dishes', async (req, res) => {
-  try {
-    if (!req.session.userId || req.session.role !== 'admin') {
-      return res.status(403).json({ error: 'Accès refusé' });
-    }
-
-    const { id_dish, course_type, course_order } = req.body;
-
-    await query(
-      `INSERT INTO menu_dishes (id_menu, id_dish, course_type, course_order) 
-       VALUES (?, ?, ?, ?)`,
-      [req.params.id, id_dish, course_type, course_order]
-    );
-
-    res.status(201).json({ message: 'Plat ajouté au menu avec succès' });
-  } catch (error) {
-    console.error('Erreur add dish to menu:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Retirer un plat d'un menu (admin uniquement)
-router.delete('/:menuId/dishes/:dishId', async (req, res) => {
-  try {
-    if (!req.session.userId || req.session.role !== 'admin') {
-      return res.status(403).json({ error: 'Accès refusé' });
-    }
-
-    await query(
-      'DELETE FROM menu_dishes WHERE id_menu = ? AND id_dish = ?',
-      [req.params.menuId, req.params.dishId]
-    );
-
-    res.json({ message: 'Plat retiré du menu avec succès' });
-  } catch (error) {
-    console.error('Erreur remove dish from menu:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Mettre à jour un menu (admin uniquement)
-router.put('/:id', async (req, res) => {
-  try {
-    if (!req.session.userId || req.session.role !== 'admin') {
-      return res.status(403).json({ error: 'Accès refusé' });
-    }
-
-    const { title, description, price, available_date, image } = req.body;
-
-    await query(
-      `UPDATE menus 
-       SET title = ?, description = ?, price = ?, available_date = ?, image = ?
-       WHERE id_menu = ?`,
-      [title, description, price, available_date, image, req.params.id]
-    );
-
-    res.json({ message: 'Menu mis à jour avec succès' });
-  } catch (error) {
-    console.error('Erreur update menu:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Supprimer un menu (admin uniquement)
-router.delete('/:id', async (req, res) => {
-  try {
-    if (!req.session.userId || req.session.role !== 'admin') {
-      return res.status(403).json({ error: 'Accès refusé' });
-    }
-
-    // Supprimer d'abord les associations avec les plats
-    await query('DELETE FROM menu_dishes WHERE id_menu = ?', [req.params.id]);
-
-    // Puis supprimer le menu
-    await query('DELETE FROM menus WHERE id_menu = ?', [req.params.id]);
-
-    res.json({ message: 'Menu supprimé avec succès' });
-  } catch (error) {
-    console.error('Erreur delete menu:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('Erreur récupération menu:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération du menu'
+    });
   }
 });
 

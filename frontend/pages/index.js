@@ -1,648 +1,400 @@
-// frontend/pages/index.js
-import { useState, useEffect } from 'react';
-import Head from 'next/head';
-import Link from 'next/link';
-import anime from 'animejs';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowRight, Star, Calendar, ChefHat, Sparkles, TrendingUp, UtensilsCrossed, Clock, MapPin, Phone, Award, Users, Heart, Zap } from 'lucide-react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { fetchSettings, fetchDishes, fetchCategories, fetchMenus } from '../utils/api';
+ import Footer from '../components/Footer';
+
+
 
 export default function Home() {
-  const [settings, setSettings] = useState({});
-  const [dishes, setDishes] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [menus, setMenus] = useState([]);
-  const [stats, setStats] = useState({
-    dishes: 0,
-    categories: 0,
-    menus: 0,
-    rating: 4.8
-  });
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ dishes: 0, categories: 0, menus: 0, rating: 0 });
+  const [isVisible, setIsVisible] = useState(false);
+  const heroRef = useRef(null);
 
+  const demoSettings = {
+    site_name: "Le Gourmet Parisien",
+    site_description: "Une expérience culinaire exceptionnelle au cœur de la gastronomie française",
+    restaurant_status: "open",
+    booking_enabled: true,
+    address: "123 Rue de la Gastronomie, 75001 Paris",
+    phone: "+33 1 23 45 67 89",
+    email: "contact@gourmet-parisien.fr"
+  };
+
+  const demoCategories = [
+    { id: 1, name: "Entrées", dish_count: 12, icon: "🥗", color: "from-green-500 to-emerald-600" },
+    { id: 2, name: "Plats", dish_count: 18, icon: "🍖", color: "from-red-500 to-orange-600" },
+    { id: 3, name: "Desserts", dish_count: 10, icon: "🍰", color: "from-pink-500 to-purple-600" },
+    { id: 4, name: "Vins", dish_count: 25, icon: "🍷", color: "from-purple-500 to-indigo-600" },
+    { id: 5, name: "Cocktails", dish_count: 8, icon: "🍹", color: "from-blue-500 to-cyan-600" },
+    { id: 6, name: "Spécialités", dish_count: 6, icon: "⭐", color: "from-yellow-500 to-orange-600" }
+  ];
+
+  const demoDishes = [
+    {
+      id: 1,
+      name: "Foie Gras Poêlé",
+      description: "Accompagné de figues confites et pain d'épices, une symphonie de saveurs automnales",
+      price: 28.50,
+      category_name: "Entrées",
+      image: "https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=800&q=80"
+    },
+    {
+      id: 2,
+      name: "Bœuf Rossini",
+      description: "Filet de bœuf, foie gras poêlé, sauce truffée et légumes de saison",
+      price: 45.00,
+      category_name: "Plats",
+      image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"
+    },
+    {
+      id: 3,
+      name: "Tarte Tatin Revisitée",
+      description: "Pommes caramélisées, glace vanille bourbon et caramel au beurre salé",
+      price: 12.00,
+      category_name: "Desserts",
+      image: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800&q=80"
+    }
+  ];
+
+  // Animation des stats au chargement
   useEffect(() => {
-    loadData();
+    setIsVisible(true);
+    
+    const animateValue = (target, duration, callback) => {
+      const start = Date.now();
+      const animate = () => {
+        const elapsed = Date.now() - start;
+        const progress = Math.min(elapsed / duration, 1);
+        callback(target * progress);
+        if (progress < 1) requestAnimationFrame(animate);
+      };
+      animate();
+    };
+
+    setTimeout(() => {
+      animateValue(73, 2000, (val) => setStats(prev => ({ ...prev, dishes: Math.floor(val) })));
+      animateValue(6, 1500, (val) => setStats(prev => ({ ...prev, categories: Math.floor(val) })));
+      animateValue(4, 1200, (val) => setStats(prev => ({ ...prev, menus: Math.floor(val) })));
+      animateValue(4.8, 2000, (val) => setStats(prev => ({ ...prev, rating: parseFloat(val.toFixed(1)) })));
+    }, 300);
   }, []);
 
-  useEffect(() => {
-    if (!loading) {
-      animateElements();
-    }
-  }, [loading]);
-
-  const loadData = async () => {
-    try {
-      const [settingsData, dishesData, categoriesData, menusData] = await Promise.all([
-        fetchSettings(),
-        fetchDishes({ limit: 6 }),
-        fetchCategories({ limit: 6 }),
-        fetchMenus({ limit: 3 })
-      ]);
-
-      setSettings(settingsData);
-      setDishes(dishesData.dishes || []);
-      setCategories(categoriesData.categories || []);
-      setMenus(menusData.menus || []);
-      setStats({
-        dishes: dishesData.total || 0,
-        categories: categoriesData.total || 0,
-        menus: menusData.total || 0,
-        rating: 4.8
-      });
-    } catch (error) {
-      console.error('Erreur chargement:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const animateElements = () => {
-    // Animation hero
-    anime({
-      targets: '.hero-content',
-      opacity: [0, 1],
-      translateY: [50, 0],
-      duration: 1000,
-      easing: 'easeOutExpo'
-    });
-
-    // Animation stats
-    anime({
-      targets: '.stat-card',
-      opacity: [0, 1],
-      translateY: [30, 0],
-      delay: anime.stagger(100, {start: 300}),
-      duration: 800,
-      easing: 'easeOutExpo'
-    });
-
-    // Animation cartes
-    anime({
-      targets: '.dish-card, .category-card, .menu-card',
-      opacity: [0, 1],
-      translateY: [30, 0],
-      delay: anime.stagger(80, {start: 500}),
-      duration: 600,
-      easing: 'easeOutExpo'
-    });
-  };
-
-  const categoryIcons = ['🥗', '🍖', '🍝', '🍟', '🍰', '🍷'];
-
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loader"></div>
-        <p>Chargement...</p>
-      </div>
-    );
-  }
-
-  const siteName = settings.site_name || 'Restaurant Gourmet';
-  const siteDescription = settings.site_description || 'Découvrez notre cuisine raffinée';
-  const restaurantStatus = settings.restaurant_status || 'open';
-  const bookingEnabled = settings.booking_enabled === '1';
-
   return (
-    <>
-      <Head>
-        <title>{siteName} - Accueil</title>
-        <meta name="description" content={siteDescription} />
-      </Head>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <Header settings={demoSettings} />
 
-      <Header settings={settings} />
-
-      {/* Alerte */}
-      {settings.show_alert === '1' && settings.alert_message && (
-        <div className="alert-banner">
-          <i className="bi bi-exclamation-triangle"></i>
-          {settings.alert_message}
+      {/* Hero Section Ultra Moderne */}
+      <section 
+        ref={heroRef}
+        className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-600 via-orange-600 to-pink-600"
+      >
+        {/* Effet de grille animée */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px'
+          }}></div>
         </div>
-      )}
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          {settings.site_logo && (
-            <img 
-              src={`/uploads/logos/${settings.site_logo}`}
-              alt={siteName}
-              className="hero-logo"
+        {/* Particules flottantes optimisées */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(15)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-white/20"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${Math.random() * 4 + 2}px`,
+                height: `${Math.random() * 4 + 2}px`,
+                animation: `floatParticle ${15 + Math.random() * 10}s infinite ease-in-out`,
+                animationDelay: `${Math.random() * 5}s`
+              }}
             />
-          )}
-          <h1 className="hero-title">🍽️ {siteName}</h1>
-          <p className="hero-subtitle">{siteDescription}</p>
+          ))}
+        </div>
+
+        {/* Contenu Hero */}
+        <div className={`relative z-10 text-center px-6 max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="mb-6 inline-block">
+            <UtensilsCrossed className="w-20 h-20 text-white drop-shadow-2xl" />
+          </div>
           
-          <div className="hero-buttons">
-            <Link href="/categories">
-              <a className="btn-hero btn-hero-primary">Découvrir notre carte</a>
-            </Link>
-            {bookingEnabled && restaurantStatus === 'open' ? (
-              <Link href="/reservation">
-                <a className="btn-hero btn-hero-secondary">Réserver une table</a>
-              </Link>
-            ) : (
-              <span className="btn-hero btn-hero-secondary disabled">
-                Réservations fermées
-              </span>
-            )}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 tracking-tight drop-shadow-2xl">
+            {demoSettings.site_name}
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-white/95 mb-4 max-w-3xl mx-auto font-light drop-shadow-lg">
+            {demoSettings.site_description}
+          </p>
+
+          <div className="flex items-center justify-center gap-3 text-white/90 mb-10">
+            <Clock className="w-5 h-5" />
+            <span className="text-lg">Ouvert tous les jours • 12h-14h30 & 19h-22h30</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a 
+              href="/categories" 
+              className="group px-10 py-4 bg-white text-red-600 rounded-full font-bold text-lg shadow-2xl hover:shadow-white/20 hover:scale-105 transition-all duration-300 flex items-center gap-3"
+            >
+              <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              Découvrir notre carte
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </a>
+
+            <a 
+              href="/reservation" 
+              className="px-10 py-4 bg-transparent border-3 border-white text-white rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all duration-300 shadow-lg flex items-center gap-3"
+            >
+              <Calendar className="w-5 h-5" />
+              Réserver une table
+            </a>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex items-start justify-center p-1.5">
+            <div className="w-1.5 h-3 bg-white/80 rounded-full animate-bounce"></div>
           </div>
         </div>
       </section>
 
-      <div className="container">
-        {/* Stats Bar */}
-        <div className="stats-bar">
-          <div className="stat-card">
-            <div className="stat-icon">🍴</div>
-            <div className="stat-number">{stats.dishes}</div>
-            <div className="stat-label">Plats au menu</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">📋</div>
-            <div className="stat-number">{stats.categories}</div>
-            <div className="stat-label">Catégories</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">🎯</div>
-            <div className="stat-number">{stats.menus}</div>
-            <div className="stat-label">Menus</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">⭐</div>
-            <div className="stat-number">{stats.rating}</div>
-            <div className="stat-label">Note moyenne</div>
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="section-header">
-          <h2 className="section-title">🎨 Nos catégories</h2>
-          <Link href="/categories"><a className="view-all">Voir tout →</a></Link>
-        </div>
-        
-        <div className="categories-grid">
-          {categories.map((cat, index) => (
-            <Link href={`/categories?cat=${cat.id_category}`} key={cat.id_category}>
-              <a className="category-card">
-                <div className="category-icon">
-                  {categoryIcons[index % categoryIcons.length]}
-                </div>
-                <div className="category-name">{cat.name}</div>
-                <div className="category-count">
-                  {cat.dish_count} plat{cat.dish_count > 1 ? 's' : ''}
-                </div>
-              </a>
-            </Link>
-          ))}
-        </div>
-
-        {/* Latest Dishes */}
-        <div className="section-header">
-          <h2 className="section-title">🔥 Nos spécialités</h2>
-          <Link href="/categories"><a className="view-all">Voir tout →</a></Link>
-        </div>
-        
-        <div className="dishes-grid">
-          {dishes.map(dish => (
-            <div key={dish.id_dish} className="dish-card">
-              {dish.image ? (
-                <img src={dish.image} alt={dish.name} className="dish-image" />
-              ) : (
-                <div className="dish-image dish-placeholder">🍽️</div>
-              )}
-              
-              <div className="dish-body">
-                {dish.category_name && (
-                  <span className="dish-category">{dish.category_name}</span>
-                )}
-                <h3 className="dish-name">{dish.name}</h3>
-                {dish.description && (
-                  <p className="dish-description">
-                    {dish.description.substring(0, 120)}
-                    {dish.description.length > 120 ? '...' : ''}
-                  </p>
-                )}
-                {dish.allergens && (
-                  <div className="dish-allergens">
-                    ⚠️ Allergènes: {dish.allergens}
+      {/* Stats Cards avec effet glassmorphism */}
+      <div className="relative -mt-20 px-6 max-w-7xl mx-auto mb-20 z-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { icon: ChefHat, value: stats.dishes, label: "Plats au menu", gradient: "from-red-500 to-orange-500" },
+            { icon: TrendingUp, value: stats.categories, label: "Catégories", gradient: "from-orange-500 to-yellow-500" },
+            { icon: Award, value: stats.menus, label: "Menus", gradient: "from-yellow-500 to-red-500" },
+            { icon: Star, value: stats.rating, label: "Note moyenne", gradient: "from-red-500 to-pink-500" }
+          ].map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={index}
+                className="group bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-gray-100"
+                style={{
+                  transitionDelay: `${index * 50}ms`
+                }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
+                    <Icon className="w-6 h-6 text-white" />
                   </div>
-                )}
-                <div className="dish-footer">
-                  <div className="dish-price">{dish.price.toFixed(2)}€</div>
-                  <button className="btn-order">Commander</button>
+                  <Sparkles className="w-5 h-5 text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                
+                <div className="text-4xl font-black text-gray-800 mb-1">
+                  {stat.value}
+                </div>
+                
+                <div className="text-gray-600 font-medium text-sm">
+                  {stat.label}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* CTA Section */}
-        <div className="cta-section">
-          <h2 className="cta-title">🎉 Réservez votre table dès maintenant</h2>
-          <p className="cta-description">
-            Vivez une expérience culinaire inoubliable dans notre restaurant
-          </p>
-          <div className="cta-buttons">
-            <Link href="/reservation">
-              <a className="btn-cta btn-cta-primary">Réserver maintenant</a>
-            </Link>
-            <Link href="/categories">
-              <a className="btn-cta btn-cta-secondary">Découvrir la carte</a>
-            </Link>
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      <Footer settings={settings} />
+      {/* Catégories Grid Moderne */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
+            Explorez Nos Catégories
+          </h2>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            Une sélection raffinée de plats élaborés avec passion par notre chef étoilé
+          </p>
+        </div>
 
-      <style jsx>{`
-        .loading-screen {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          background: #f5f7fa;
-        }
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {demoCategories.map((cat, index) => (
+            <a
+              href={`/categories?id=${cat.id}`}
+              key={cat.id}
+              className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden"
+              style={{
+                transitionDelay: `${index * 50}ms`
+              }}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+              
+              <div className="relative">
+                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                  {cat.icon}
+                </div>
+                
+                <h3 className="text-2xl font-bold text-gray-800 mb-2 group-hover:text-red-600 transition-colors">
+                  {cat.name}
+                </h3>
+                
+                <p className="text-gray-600 font-medium">
+                  {cat.dish_count} plat{cat.dish_count > 1 ? 's' : ''}
+                </p>
 
-        .loader {
-          width: 50px;
-          height: 50px;
-          border: 4px solid #ecf0f1;
-          border-top: 4px solid #e74c3c;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
+                <ArrowRight className="absolute top-4 right-4 w-5 h-5 text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
 
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
+      {/* Plats Signature avec design carte moderne */}
+      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
+              Nos Créations Signature
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Les coups de cœur de notre chef, préparés avec des ingrédients d'exception
+            </p>
+          </div>
 
-        .hero-section {
-          background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-          color: white;
-          padding: 100px 20px;
-          text-align: center;
-          position: relative;
-          overflow: hidden;
-          margin-bottom: 20px;
-          border-radius: 10px;
-        }
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {demoDishes.map((dish, index) => (
+              <div
+                key={dish.id}
+                className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+                style={{
+                  transitionDelay: `${index * 75}ms`
+                }}
+              >
+                <div className="relative h-64 overflow-hidden">
+                  <img
+                    src={dish.image}
+                    alt={dish.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute top-4 right-4 px-3 py-1 bg-gradient-to-r from-red-600 to-orange-600 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1">
+                    <Zap className="w-3 h-3" />
+                    NOUVEAU
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
 
-        .hero-content {
-          max-width: 900px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
+                <div className="p-6">
+                  <div className="inline-block px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-semibold mb-3">
+                    {dish.category_name}
+                  </div>
 
-        .hero-logo {
-          max-width: 150px;
-          margin-bottom: 20px;
-          filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
-        }
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-red-600 transition-colors">
+                    {dish.name}
+                  </h3>
 
-        .hero-title {
-          font-size: 3.5em;
-          margin-bottom: 20px;
-          font-weight: bold;
-        }
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {dish.description}
+                  </p>
 
-        .hero-subtitle {
-          font-size: 1.4em;
-          margin-bottom: 40px;
-          opacity: 0.95;
-        }
+                  <div className="flex justify-between items-center">
+                    <div className="text-3xl font-black bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                      {dish.price.toFixed(2)}€
+                    </div>
+                    
+                    <button className="px-6 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-full font-semibold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                      Commander
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        .hero-buttons {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
+      {/* Section Informations */}
+      <section className="py-20 px-6 bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="text-center group hover:scale-105 transition-transform duration-300">
+              <div className="inline-block p-4 bg-red-600/20 rounded-2xl mb-4 group-hover:bg-red-600/30 transition-colors">
+                <MapPin className="w-10 h-10 text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Notre Adresse</h3>
+              <p className="text-gray-400">{demoSettings.address}</p>
+            </div>
 
-        .btn-hero {
-          padding: 18px 40px;
-          border-radius: 50px;
-          font-size: 1.1em;
-          font-weight: bold;
-          text-decoration: none;
-          display: inline-block;
-          transition: all 0.3s;
-          border: 2px solid white;
-        }
+            <div className="text-center group hover:scale-105 transition-transform duration-300">
+              <div className="inline-block p-4 bg-orange-600/20 rounded-2xl mb-4 group-hover:bg-orange-600/30 transition-colors">
+                <Phone className="w-10 h-10 text-orange-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Téléphone</h3>
+              <a href={`tel:${demoSettings.phone}`} className="text-gray-400 hover:text-white transition-colors">
+                {demoSettings.phone}
+              </a>
+            </div>
 
-        .btn-hero-primary {
-          background: white;
-          color: #e74c3c;
-        }
+            <div className="text-center group hover:scale-105 transition-transform duration-300">
+              <div className="inline-block p-4 bg-yellow-600/20 rounded-2xl mb-4 group-hover:bg-yellow-600/30 transition-colors">
+                <Clock className="w-10 h-10 text-yellow-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Horaires</h3>
+              <p className="text-gray-400">
+                Lun-Dim: 12h-14h30<br/>
+                19h-22h30
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        .btn-hero-secondary {
-          background: transparent;
-          color: white;
-        }
+      {/* CTA Final Minimaliste */}
+      <section className="py-24 px-6 bg-gradient-to-br from-red-600 to-orange-600 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-72 h-72 bg-pink-300 rounded-full blur-3xl"></div>
+        </div>
 
-        .btn-hero:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
+          <Star className="w-16 h-16 mx-auto text-yellow-300 mb-6" fill="currentColor" />
+          
+          <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
+            Réservez Votre Table
+          </h2>
+          
+          <p className="text-xl text-white/95 mb-10 max-w-2xl mx-auto">
+            Vivez une expérience culinaire inoubliable dans notre restaurant étoilé
+          </p>
 
-        .btn-hero.disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/reservation"
+              className="group px-10 py-4 bg-white text-red-600 rounded-full font-bold text-lg shadow-2xl hover:shadow-white/20 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              Réserver maintenant
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </a>
 
-        .container {
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 50px 20px;
-        }
+            <a
+              href="/categories"
+              className="px-10 py-4 bg-transparent border-3 border-white text-white rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all duration-300"
+            >
+              Découvrir la carte
+            </a>
+          </div>
+        </div>
+      </section>
 
-        .stats-bar {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 20px;
-          margin-bottom: 60px;
-          margin-top: -50px;
-        }
+      <Footer settings={demoSettings} />
 
-        .stat-card {
-          background: white;
-          padding: 30px;
-          border-radius: 15px;
-          text-align: center;
-          box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-          transition: transform 0.3s;
-        }
-
-        .stat-card:hover {
-          transform: translateY(-5px);
-        }
-
-        .stat-icon {
-          font-size: 3em;
-          margin-bottom: 15px;
-        }
-
-        .stat-number {
-          font-size: 2.5em;
-          font-weight: bold;
-          color: #e74c3c;
-          margin-bottom: 8px;
-        }
-
-        .stat-label {
-          color: #7f8c8d;
-          font-size: 1em;
-          font-weight: 600;
-        }
-
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 35px;
-        }
-
-        .section-title {
-          font-size: 2.5em;
-          color: #2c3e50;
-          display: flex;
-          align-items: center;
-          gap: 15px;
-        }
-
-        .view-all {
-          color: #e74c3c;
-          text-decoration: none;
-          font-weight: 600;
-          font-size: 1.1em;
-          transition: color 0.3s;
-        }
-
-        .view-all:hover {
-          color: #c0392b;
-        }
-
-        .categories-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 25px;
-          margin-bottom: 60px;
-        }
-
-        .category-card {
-          background: white;
-          padding: 35px;
-          border-radius: 20px;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.3s;
-          box-shadow: 0 3px 15px rgba(0,0,0,0.1);
-          text-decoration: none;
-          color: inherit;
-        }
-
-        .category-card:hover {
-          transform: translateY(-8px) scale(1.02);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .category-icon {
-          font-size: 4em;
-          margin-bottom: 15px;
-        }
-
-        .category-name {
-          font-size: 1.4em;
-          font-weight: 700;
-          margin-bottom: 10px;
-          color: #2c3e50;
-        }
-
-        .category-count {
-          color: #7f8c8d;
-          font-size: 0.95em;
-        }
-
-        .dishes-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 30px;
-          margin-bottom: 60px;
-        }
-
-        .dish-card {
-          background: white;
-          border-radius: 20px;
-          overflow: hidden;
-          box-shadow: 0 3px 15px rgba(0,0,0,0.1);
-          transition: all 0.3s;
-          cursor: pointer;
-        }
-
-        .dish-card:hover {
-          transform: translateY(-10px);
-          box-shadow: 0 10px 35px rgba(0,0,0,0.2);
-        }
-
-        .dish-image {
-          width: 100%;
-          height: 250px;
-          object-fit: cover;
-        }
-
-        .dish-placeholder {
-          background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 4em;
-        }
-
-        .dish-body {
-          padding: 25px;
-        }
-
-        .dish-category {
-          display: inline-block;
-          padding: 6px 14px;
-          background: #ffe8e6;
-          color: #e74c3c;
-          border-radius: 20px;
-          font-size: 0.85em;
-          font-weight: 600;
-          margin-bottom: 12px;
-        }
-
-        .dish-name {
-          font-size: 1.6em;
-          margin-bottom: 12px;
-          color: #2c3e50;
-          font-weight: 700;
-        }
-
-        .dish-description {
-          color: #666;
-          line-height: 1.7;
-          margin-bottom: 18px;
-          font-size: 0.95em;
-        }
-
-        .dish-allergens {
-          background: #fff3cd;
-          padding: 8px 12px;
-          border-radius: 8px;
-          font-size: 0.85em;
-          color: #856404;
-          margin-bottom: 15px;
-        }
-
-        .dish-footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-top: 15px;
-          border-top: 2px solid #ecf0f1;
-        }
-
-        .dish-price {
-          font-size: 2em;
-          font-weight: bold;
-          color: #27ae60;
-        }
-
-        .btn-order {
-          padding: 12px 25px;
-          background: #e74c3c;
-          color: white;
-          border: none;
-          border-radius: 10px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.3s;
-        }
-
-        .btn-order:hover {
-          background: #c0392b;
-        }
-
-        .cta-section {
-          background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-          color: white;
-          padding: 70px 40px;
-          border-radius: 25px;
-          text-align: center;
-          margin-bottom: 60px;
-          box-shadow: 0 10px 40px rgba(231, 76, 60, 0.3);
-        }
-
-        .cta-title {
-          font-size: 2.8em;
-          margin-bottom: 20px;
-          font-weight: bold;
-        }
-
-        .cta-description {
-          font-size: 1.3em;
-          margin-bottom: 35px;
-          opacity: 0.95;
-        }
-
-        .cta-buttons {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-
-        .btn-cta {
-          padding: 18px 45px;
-          border-radius: 50px;
-          font-size: 1.2em;
-          font-weight: bold;
-          text-decoration: none;
-          display: inline-block;
-          transition: all 0.3s;
-        }
-
-        .btn-cta-primary {
-          background: white;
-          color: #e74c3c;
-        }
-
-        .btn-cta-secondary {
-          background: transparent;
-          color: white;
-          border: 2px solid white;
-        }
-
-        .btn-cta:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-        @media (max-width: 768px) {
-          .hero-title {
-            font-size: 2.2em;
+      <style jsx global>{`
+        @keyframes floatParticle {
+          0%, 100% {
+            transform: translateY(0) translateX(0);
+            opacity: 0.2;
           }
-          .hero-subtitle {
-            font-size: 1.1em;
-          }
-          .dishes-grid,
-          .categories-grid {
-            grid-template-columns: 1fr;
-          }
-          .section-title {
-            font-size: 1.8em;
-          }
-          .stats-bar {
-            grid-template-columns: repeat(2, 1fr);
+          50% {
+            transform: translateY(-100px) translateX(20px);
+            opacity: 0.8;
           }
         }
       `}</style>
-    </>
+    </div>
   );
 }
