@@ -4,8 +4,8 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "build": "cd frontend && npm install && npm run build",
-    "postinstall": "cd frontend && npm install"
+    "build": "npm run build",
+    "postinstall": "npm install"
   },
   "dependencies": {
     "animejs": "^4.2.2",
