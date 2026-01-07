@@ -3,7 +3,8 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/dashboard": "pages/dashboard.js",
   "/menus": "pages/menus.js",
-  "/login": "pages/login.js"
+  "/reservation": "pages/reservation.js",
+  "/contact": "pages/contact.js",
+  "/categories": "pages/categories.js"
 }
