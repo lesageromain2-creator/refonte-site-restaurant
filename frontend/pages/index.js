@@ -137,9 +137,13 @@ export default function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   const demoSettings = {
-    site_name: 'Studio Web Breizh',
+    site_name: 'LE SAGE',
     site_description:
-      'Agence web bretonne spécialisée en sites vitrines, e-commerce et applications web modernes.',
+      'Création de sites web professionnels sur-mesure — Restaurant • Commerce • Service',
+    email: 'lesage.pro.dev@gmail.com',
+    phone_number: '+33 07 86 18 18 40',
+    city: 'Lyon',
+    website: 'www.LeSageDev.com',
   };
 
   useEffect(() => {

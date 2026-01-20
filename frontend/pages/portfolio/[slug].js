@@ -4,7 +4,13 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
 const demoSettings = {
-  site_name: 'Studio Web Breizh',
+  site_name: 'LE SAGE',
+  site_description:
+    'Création de sites web professionnels sur-mesure — design moderne, performance et maintenance continue.',
+  email: 'lesage.pro.dev@gmail.com',
+  phone_number: '+33 07 86 18 18 40',
+  city: 'Lyon',
+  website: 'www.LeSageDev.com',
 };
 
 const portfolioProjects = [
@@ -126,7 +132,6 @@ export default function ProjectDetailPage({ project, moreProjects }) {
           content={project.description.slice(0, 155)}
         />
       </Head>
-
       <div className="min-h-screen bg-dark text-light">
         <Header settings={demoSettings} />
 
@@ -231,10 +236,12 @@ export default function ProjectDetailPage({ project, moreProjects }) {
                   </a>
                 )}
 
-                <Link href="/reservation">
-                  <a className="block rounded-3xl border border-white/20 bg-white/5 px-5 py-4 text-center text-sm font-semibold text-slate-100 backdrop-blur transition hover:bg-white/10">
+                <Link
+                  href="/reservation"
+                  className="block rounded-3xl border border-white/20 bg-white/5 px-5 py-4 text-center text-sm font-semibold text-slate-100 backdrop-blur transition hover:bg-white/10">
+                  
                     Discuter d’un projet similaire
-                  </a>
+                  
                 </Link>
               </aside>
             </section>
@@ -246,22 +253,25 @@ export default function ProjectDetailPage({ project, moreProjects }) {
                 </h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
                   {moreProjects.map((p) => (
-                    <Link key={p.slug} href={`/portfolio/${p.slug}`}>
-                      <a className="group overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-md transition hover:-translate-y-1 hover:border-secondary/70 hover:shadow-xl">
-                        <img
-                          src={p.thumbnail_url}
-                          alt={p.title}
-                          className="h-28 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="p-3">
-                          <p className="text-xs font-semibold text-white md:text-sm">
-                            {p.title}
-                          </p>
-                          <p className="mt-1 text-[11px] text-slate-400">
-                            {categoryLabels[p.category] || p.category}
-                          </p>
-                        </div>
-                      </a>
+                    <Link
+                      key={p.slug}
+                      href={`/portfolio/${p.slug}`}
+                      className="group overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-md transition hover:-translate-y-1 hover:border-secondary/70 hover:shadow-xl">
+
+                      <img
+                        src={p.thumbnail_url}
+                        alt={p.title}
+                        className="h-28 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="p-3">
+                        <p className="text-xs font-semibold text-white md:text-sm">
+                          {p.title}
+                        </p>
+                        <p className="mt-1 text-[11px] text-slate-400">
+                          {categoryLabels[p.category] || p.category}
+                        </p>
+                      </div>
+
                     </Link>
                   ))}
                 </div>

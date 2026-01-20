@@ -4,7 +4,13 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
 const demoSettings = {
-  site_name: 'Studio Web Breizh',
+  site_name: 'LE SAGE',
+  site_description:
+    'Création de sites web professionnels sur-mesure — design moderne, performance et maintenance continue.',
+  email: 'lesage.pro.dev@gmail.com',
+  phone_number: '+33 07 86 18 18 40',
+  city: 'Lyon',
+  website: 'www.LeSageDev.com',
 };
 
 const portfolioProjects = [
@@ -91,7 +97,6 @@ export default function PortfolioPage({ projects }) {
           content="Découvrez une sélection de réalisations : sites vitrines, boutiques e-commerce et applications web conçues pour des acteurs bretons et francophones."
         />
       </Head>
-
       <div className="min-h-screen bg-dark text-light">
         <Header settings={demoSettings} />
 
@@ -117,51 +122,50 @@ export default function PortfolioPage({ projects }) {
                   key={project.id}
                   className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-lg transition-all hover:-translate-y-1 hover:border-secondary/70 hover:shadow-2xl"
                 >
-                  <Link href={`/portfolio/${project.slug}`}>
-                    <a className="flex h-full flex-col">
-                      <div className="relative h-44 overflow-hidden">
-                        <img
-                          src={project.thumbnail_url}
-                          alt={project.title}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60" />
-                        <div className="absolute left-3 top-3 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-slate-100 backdrop-blur">
-                          {categoryLabels[project.category] ||
-                            project.category}
-                        </div>
-                        {project.featured && (
-                          <div className="absolute right-3 top-3 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 shadow-lg">
-                            Projet phare
-                          </div>
-                        )}
-                      </div>
+                  <Link href={`/portfolio/${project.slug}`} className="flex h-full flex-col">
 
-                      <div className="flex flex-1 flex-col p-5">
-                        <h2 className="font-heading text-base font-semibold text-white md:text-lg">
-                          {project.title}
-                        </h2>
-                        {project.client_name && (
-                          <p className="mt-1 text-xs text-slate-400">
-                            {project.client_name}
-                          </p>
-                        )}
-                        <p className="mt-3 flex-1 text-xs text-slate-300 md:text-sm">
-                          {project.short_description}
-                        </p>
-                        <div className="mt-4 flex flex-wrap gap-2 text-[11px] text-slate-200">
-                          {project.technologies.map((tech) => (
-                            <span
-                              key={tech}
-                              className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5"
-                            >
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
+                    <div className="relative h-44 overflow-hidden">
+                      <img
+                        src={project.thumbnail_url}
+                        alt={project.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60" />
+                      <div className="absolute left-3 top-3 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-slate-100 backdrop-blur">
+                        {categoryLabels[project.category] ||
+                          project.category}
                       </div>
-                    </a>
+                      {project.featured && (
+                        <div className="absolute right-3 top-3 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-950 shadow-lg">
+                          Projet phare
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h2 className="font-heading text-base font-semibold text-white md:text-lg">
+                        {project.title}
+                      </h2>
+                      {project.client_name && (
+                        <p className="mt-1 text-xs text-slate-400">
+                          {project.client_name}
+                        </p>
+                      )}
+                      <p className="mt-3 flex-1 text-xs text-slate-300 md:text-sm">
+                        {project.short_description}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2 text-[11px] text-slate-200">
+                        {project.technologies.map((tech) => (
+                          <span
+                            key={tech}
+                            className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
                   </Link>
                 </article>
               ))}

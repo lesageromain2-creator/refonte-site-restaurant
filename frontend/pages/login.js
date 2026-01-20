@@ -99,7 +99,7 @@ export default function Login() {
   return (
     <>
       <Head>
-        <title>Connexion - {settings.site_name || 'Restaurant'}</title>
+        <title>Connexion - {settings.site_name || 'LE SAGE'}</title>
       </Head>
 
       <Header settings={settings} />

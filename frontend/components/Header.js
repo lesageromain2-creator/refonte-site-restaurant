@@ -5,9 +5,10 @@ import { useRouter } from 'next/router';
 
 const navItems = [
   { href: '/', label: 'Accueil' },
+  { href: '/services', label: 'Services' },
   { href: '/offres', label: 'Offres' },
   { href: '/portfolio', label: 'Portfolio' },
-  { href: '/reservation', label: 'Réservation' },
+  { href: '/about', label: 'Présentation' },
   { href: '/contact', label: 'Contact' },
 ];
 
@@ -17,7 +18,7 @@ export default function Header({ settings = {} }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
-  const siteName = settings.site_name || 'Studio Web Breizh';
+  const siteName = settings.site_name || 'LE SAGE';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 24);
@@ -61,16 +62,16 @@ export default function Header({ settings = {} }) {
           href="/"
           className="flex items-center gap-3"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/40">
-            <span className="text-lg font-black text-white">SB</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/40">
+              <span className="text-lg font-black text-white">LS</span>
           </div>
           <div className="flex flex-col">
             <span className="font-heading text-sm font-semibold tracking-tight text-white md:text-base">
               {siteName}
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">
-              Studio web breton
-            </span>
+              <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">
+                Création de sites web sur-mesure
+              </span>
           </div>
         </Link>
 
@@ -155,7 +156,7 @@ export default function Header({ settings = {} }) {
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary">
-              <span className="text-sm font-black text-white">SB</span>
+              <span className="text-sm font-black text-white">LS</span>
             </div>
             <span className="text-sm font-semibold text-white">
               {siteName}
