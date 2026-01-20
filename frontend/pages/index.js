@@ -1,65 +1,148 @@
-import { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Star, Calendar, ChefHat, Sparkles, TrendingUp, UtensilsCrossed, Clock, MapPin, Phone, Award, Users, Heart, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import Head from 'next/head';
+import {
+  ArrowRight,
+  Calendar,
+  Sparkles,
+  TrendingUp,
+  Star,
+  Users,
+  Zap,
+  Monitor,
+  ShoppingBag,
+  AppWindow,
+  Rocket,
+  CheckCircle2,
+} from 'lucide-react';
 import Header from '../components/Header';
- import Footer from '../components/Footer';
+import Footer from '../components/Footer';
 
+const heroWords = [
+  'sites vitrines',
+  'e-commerces performants',
+  'applications web sur-mesure',
+];
 
+const services = [
+  {
+    id: 'vitrine',
+    title: 'Site vitrine premium',
+    description:
+      'Une présence en ligne élégante et optimisée pour présenter votre activité et générer des contacts qualifiés.',
+    icon: Monitor,
+    tag: 'Branding & visibilité',
+  },
+  {
+    id: 'ecommerce',
+    title: 'Boutique e-commerce',
+    description:
+      'Une expérience d’achat fluide et rassurante, pensée pour convertir vos visiteurs en clients fidèles.',
+    icon: ShoppingBag,
+    tag: 'Conversion & ventes',
+  },
+  {
+    id: 'webapp',
+    title: 'Application web',
+    description:
+      'Des outils métiers sur-mesure, performants et scalables pour accompagner la croissance de votre entreprise.',
+    icon: AppWindow,
+    tag: 'Sur-mesure & performance',
+  },
+  {
+    id: 'refonte',
+    title: 'Refonte & optimisation',
+    description:
+      'Audit complet, modernisation UI/UX, optimisation des performances et du référencement de votre site actuel.',
+    icon: Rocket,
+    tag: 'Refonte & SEO',
+  },
+];
+
+const processSteps = [
+  {
+    title: 'Découverte',
+    description:
+      'Un échange structuré pour comprendre vos objectifs business, votre audience et vos contraintes.',
+  },
+  {
+    title: 'Design',
+    description:
+      'Maquettes haute-fidélité, identité visuelle et parcours utilisateur pensés pour la conversion.',
+  },
+  {
+    title: 'Développement',
+    description:
+      'Intégration Next.js, backend sécurisé et mise en place des connexions aux outils clés.',
+  },
+  {
+    title: 'Lancement & suivi',
+    description:
+      'Mise en production, monitoring, optimisations continues et accompagnement post-lancement.',
+  },
+];
+
+const portfolioHighlights = [
+  {
+    title: 'Studio Breizh Surf',
+    category: 'Site vitrine',
+    description:
+      'Refonte complète de l’identité digitale d’une école de surf bretonne, avec réservation en ligne intégrée.',
+    tech: ['Next.js', 'Supabase', 'Framer Motion'],
+  },
+  {
+    title: 'Armor Café',
+    category: 'E-commerce',
+    description:
+      'Boutique en ligne pour un torréfacteur artisanal, optimisée pour le mobile et le SEO local.',
+    tech: ['Next.js', 'Stripe', 'Tailwind'],
+  },
+  {
+    title: 'Keltia Tech',
+    category: 'Application web',
+    description:
+      'Dashboard SaaS pour piloter des campagnes marketing multi-canales en temps réel.',
+    tech: ['React', 'Node.js', 'PostgreSQL'],
+  },
+];
+
+const testimonials = [
+  {
+    name: 'Julie M.',
+    role: 'Fondatrice, Studio Breizh Surf',
+    quote:
+      'Nous avons doublé nos réservations en ligne en une saison. L’équipe a parfaitement compris nos enjeux locaux.',
+  },
+  {
+    name: 'Thomas L.',
+    role: 'Gérant, Armor Café',
+    quote:
+      'Un site rapide, beau, et surtout qui vend. Le back-office est simple et l’accompagnement au top.',
+  },
+  {
+    name: 'Claire R.',
+    role: 'CMO, Keltia Tech',
+    quote:
+      'Une application web robuste et évolutive, livrée dans les temps avec une qualité irréprochable.',
+  },
+];
 
 export default function Home() {
-  const [stats, setStats] = useState({ dishes: 0, categories: 0, menus: 0, rating: 0 });
-  const [isVisible, setIsVisible] = useState(false);
-  const heroRef = useRef(null);
+  const [stats, setStats] = useState({
+    projects: 0,
+    clients: 0,
+    years: 0,
+    satisfaction: 0,
+  });
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   const demoSettings = {
-    site_name: "Le Gourmet Parisien",
-    site_description: "Une expérience culinaire exceptionnelle au cœur de la gastronomie française",
-    restaurant_status: "open",
-    booking_enabled: true,
-    address: "123 Rue de la Gastronomie, 75001 Paris",
-    phone: "+33 1 23 45 67 89",
-    email: "contact@gourmet-parisien.fr"
+    site_name: 'Studio Web Breizh',
+    site_description:
+      'Agence web bretonne spécialisée en sites vitrines, e-commerce et applications web modernes.',
   };
 
-  const demoCategories = [
-    { id: 1, name: "Entrées", dish_count: 12, icon: "🥗", color: "from-green-500 to-emerald-600" },
-    { id: 2, name: "Plats", dish_count: 18, icon: "🍖", color: "from-red-500 to-orange-600" },
-    { id: 3, name: "Desserts", dish_count: 10, icon: "🍰", color: "from-pink-500 to-purple-600" },
-    { id: 4, name: "Vins", dish_count: 25, icon: "🍷", color: "from-purple-500 to-indigo-600" },
-    { id: 5, name: "Cocktails", dish_count: 8, icon: "🍹", color: "from-blue-500 to-cyan-600" },
-    { id: 6, name: "Spécialités", dish_count: 6, icon: "⭐", color: "from-yellow-500 to-orange-600" }
-  ];
-
-  const demoDishes = [
-    {
-      id: 1,
-      name: "Foie Gras Poêlé",
-      description: "Accompagné de figues confites et pain d'épices, une symphonie de saveurs automnales",
-      price: 28.50,
-      category_name: "Entrées",
-      image: "https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=800&q=80"
-    },
-    {
-      id: 2,
-      name: "Bœuf Rossini",
-      description: "Filet de bœuf, foie gras poêlé, sauce truffée et légumes de saison",
-      price: 45.00,
-      category_name: "Plats",
-      image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"
-    },
-    {
-      id: 3,
-      name: "Tarte Tatin Revisitée",
-      description: "Pommes caramélisées, glace vanille bourbon et caramel au beurre salé",
-      price: 12.00,
-      category_name: "Desserts",
-      image: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800&q=80"
-    }
-  ];
-
-  // Animation des stats au chargement
   useEffect(() => {
-    setIsVisible(true);
-    
     const animateValue = (target, duration, callback) => {
       const start = Date.now();
       const animate = () => {
@@ -72,329 +155,620 @@ export default function Home() {
     };
 
     setTimeout(() => {
-      animateValue(73, 2000, (val) => setStats(prev => ({ ...prev, dishes: Math.floor(val) })));
-      animateValue(6, 1500, (val) => setStats(prev => ({ ...prev, categories: Math.floor(val) })));
-      animateValue(4, 1200, (val) => setStats(prev => ({ ...prev, menus: Math.floor(val) })));
-      animateValue(4.8, 2000, (val) => setStats(prev => ({ ...prev, rating: parseFloat(val.toFixed(1)) })));
+      animateValue(48, 1800, (val) =>
+        setStats((prev) => ({ ...prev, projects: Math.floor(val) })),
+      );
+      animateValue(32, 1700, (val) =>
+        setStats((prev) => ({ ...prev, clients: Math.floor(val) })),
+      );
+      animateValue(5, 1600, (val) =>
+        setStats((prev) => ({ ...prev, years: Math.floor(val) })),
+      );
+      animateValue(4.9, 2000, (val) =>
+        setStats((prev) => ({
+          ...prev,
+          satisfaction: parseFloat(val.toFixed(1)),
+        })),
+      );
     }, 300);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentWordIndex((prev) => (prev + 1) % heroWords.length);
+    }, 2600);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentHeroWord = heroWords[currentWordIndex];
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <Header settings={demoSettings} />
+    <>
+      <Head>
+        <title>
+          Studio Web Breizh – Création de sites vitrines, e-commerce &
+          applications web
+        </title>
+        <meta
+          name="description"
+          content="Agence web bretonne spécialisée dans la création de sites vitrines, e-commerce et applications web modernes, performantes et orientées business."
+        />
+      </Head>
 
-      {/* Hero Section Ultra Moderne */}
-      <section 
-        ref={heroRef}
-        className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-600 via-orange-600 to-pink-600"
-      >
-        {/* Effet de grille animée */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px'
-          }}></div>
-        </div>
+      <div className="min-h-screen bg-dark text-light">
+        <Header settings={demoSettings} />
 
-        {/* Particules flottantes optimisées */}
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(15)].map((_, i) => (
+        {/* HERO */}
+        <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#030712] via-[#020617] to-[#020617]">
+          <div className="pointer-events-none absolute inset-0 opacity-40">
             <div
-              key={i}
-              className="absolute rounded-full bg-white/20"
+              className="absolute inset-0"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                width: `${Math.random() * 4 + 2}px`,
-                height: `${Math.random() * 4 + 2}px`,
-                animation: `floatParticle ${15 + Math.random() * 10}s infinite ease-in-out`,
-                animationDelay: `${Math.random() * 5}s`
+                backgroundImage:
+                  'radial-gradient(circle at 0% 0%, rgba(0,102,255,0.55) 0, transparent 55%), radial-gradient(circle at 100% 100%, rgba(0,217,255,0.55) 0, transparent 55%)',
               }}
             />
-          ))}
-        </div>
-
-        {/* Contenu Hero */}
-        <div className={`relative z-10 text-center px-6 max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="mb-6 inline-block">
-            <UtensilsCrossed className="w-20 h-20 text-white drop-shadow-2xl" />
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 tracking-tight drop-shadow-2xl">
-            {demoSettings.site_name}
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-white/95 mb-4 max-w-3xl mx-auto font-light drop-shadow-lg">
-            {demoSettings.site_description}
-          </p>
-
-          <div className="flex items-center justify-center gap-3 text-white/90 mb-10">
-            <Clock className="w-5 h-5" />
-            <span className="text-lg">Ouvert tous les jours • 12h-14h30 & 19h-22h30</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a 
-              href="/categories" 
-              className="group px-10 py-4 bg-white text-red-600 rounded-full font-bold text-lg shadow-2xl hover:shadow-white/20 hover:scale-105 transition-all duration-300 flex items-center gap-3"
-            >
-              <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              Découvrir notre carte
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </a>
-
-            <a 
-              href="/reservation" 
-              className="px-10 py-4 bg-transparent border-3 border-white text-white rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all duration-300 shadow-lg flex items-center gap-3"
-            >
-              <Calendar className="w-5 h-5" />
-              Réserver une table
-            </a>
-          </div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex items-start justify-center p-1.5">
-            <div className="w-1.5 h-3 bg-white/80 rounded-full animate-bounce"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Cards avec effet glassmorphism */}
-      <div className="relative -mt-20 px-6 max-w-7xl mx-auto mb-20 z-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { icon: ChefHat, value: stats.dishes, label: "Plats au menu", gradient: "from-red-500 to-orange-500" },
-            { icon: TrendingUp, value: stats.categories, label: "Catégories", gradient: "from-orange-500 to-yellow-500" },
-            { icon: Award, value: stats.menus, label: "Menus", gradient: "from-yellow-500 to-red-500" },
-            { icon: Star, value: stats.rating, label: "Note moyenne", gradient: "from-red-500 to-pink-500" }
-          ].map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div
-                key={index}
-                className="group bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-gray-100"
-                style={{
-                  transitionDelay: `${index * 50}ms`
-                }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <Sparkles className="w-5 h-5 text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                
-                <div className="text-4xl font-black text-gray-800 mb-1">
-                  {stat.value}
-                </div>
-                
-                <div className="text-gray-600 font-medium text-sm">
-                  {stat.label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Catégories Grid Moderne */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
-            Explorez Nos Catégories
-          </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Une sélection raffinée de plats élaborés avec passion par notre chef étoilé
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {demoCategories.map((cat, index) => (
-            <a
-              href={`/categories?id=${cat.id}`}
-              key={cat.id}
-              className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden"
+          <div className="absolute inset-0 opacity-[0.05]">
+            <div
+              className="absolute inset-0"
               style={{
-                transitionDelay: `${index * 50}ms`
+                backgroundImage:
+                  'linear-gradient(rgba(148,163,184,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.25) 1px, transparent 1px)',
+                backgroundSize: '40px 40px',
               }}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-              
-              <div className="relative">
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                  {cat.icon}
-                </div>
-                
-                <h3 className="text-2xl font-bold text-gray-800 mb-2 group-hover:text-red-600 transition-colors">
-                  {cat.name}
-                </h3>
-                
-                <p className="text-gray-600 font-medium">
-                  {cat.dish_count} plat{cat.dish_count > 1 ? 's' : ''}
-                </p>
-
-                <ArrowRight className="absolute top-4 right-4 w-5 h-5 text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* Plats Signature avec design carte moderne */}
-      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
-              Nos Créations Signature
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Les coups de cœur de notre chef, préparés avec des ingrédients d'exception
-            </p>
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {demoDishes.map((dish, index) => (
-              <div
-                key={dish.id}
-                className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
-                style={{
-                  transitionDelay: `${index * 75}ms`
-                }}
-              >
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={dish.image}
-                    alt={dish.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-gradient-to-r from-red-600 to-orange-600 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1">
-                    <Zap className="w-3 h-3" />
-                    NOUVEAU
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-24 md:flex-row md:items-center">
+            <div className="flex-1 space-y-8">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-200 backdrop-blur">
+                <Sparkles className="h-3 w-3 text-secondary" />
+                Agence web créative basée en Bretagne
+              </span>
+
+              <h1 className="font-heading text-4xl font-black tracking-tight text-white md:text-5xl lg:text-6xl">
+                Nous concevons des
+                <span className="relative ml-2 inline-block align-baseline">
+                  <span className="relative z-10 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    expériences digitales
+                  </span>
+                  <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-gradient-to-r from-primary to-secondary" />
+                </span>
+                <br className="hidden md:block" />
+                qui transforment votre business.
+              </h1>
+
+              <p className="max-w-xl text-base text-slate-300 md:text-lg">
+                Sites vitrines, boutiques en ligne et applications web
+                performantes, pensées pour vos utilisateurs et vos objectifs
+                business. Nous accompagnons les marques bretonnes et
+                francophones dans leur croissance digitale.
+              </p>
+
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-slate-200 backdrop-blur">
+                <span className="text-slate-400">Nous créons</span>
+                <span className="relative inline-flex min-w-[190px] justify-start overflow-hidden">
+                  <span className="animate-[fadeIn_0.6s_ease-out] bg-gradient-to-r from-secondary to-primary bg-clip-text font-medium text-transparent">
+                    {currentHeroWord}
+                  </span>
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <a
+                  href="/reservation"
+                  className="group inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-primary to-secondary px-8 py-3 text-sm font-semibold text-white shadow-xl shadow-primary/40 transition-all hover:-translate-y-0.5 hover:shadow-2xl"
+                >
+                  Démarrer mon projet
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </a>
+                <a
+                  href="/portfolio"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3 text-sm font-medium text-slate-100 backdrop-blur transition hover:bg-white/10"
+                >
+                  Voir nos réalisations
+                </a>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-6 text-xs text-slate-300 md:text-sm">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-secondary" />
+                  <span>Score Lighthouse &gt; 90 garanti</span>
                 </div>
-
-                <div className="p-6">
-                  <div className="inline-block px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-semibold mb-3">
-                    {dish.category_name}
-                  </div>
-
-                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-red-600 transition-colors">
-                    {dish.name}
-                  </h3>
-
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {dish.description}
-                  </p>
-
-                  <div className="flex justify-between items-center">
-                    <div className="text-3xl font-black bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-                      {dish.price.toFixed(2)}€
-                    </div>
-                    
-                    <button className="px-6 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-full font-semibold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
-                      Commander
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-secondary" />
+                  <span>Hébergement optimisé sur Vercel & Render</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-secondary" />
+                  <span>Approche SEO & accessibilité by design</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Section Informations */}
-      <section className="py-20 px-6 bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="text-center group hover:scale-105 transition-transform duration-300">
-              <div className="inline-block p-4 bg-red-600/20 rounded-2xl mb-4 group-hover:bg-red-600/30 transition-colors">
-                <MapPin className="w-10 h-10 text-red-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Notre Adresse</h3>
-              <p className="text-gray-400">{demoSettings.address}</p>
             </div>
 
-            <div className="text-center group hover:scale-105 transition-transform duration-300">
-              <div className="inline-block p-4 bg-orange-600/20 rounded-2xl mb-4 group-hover:bg-orange-600/30 transition-colors">
-                <Phone className="w-10 h-10 text-orange-400" />
+            <div className="mt-10 flex-1 md:mt-0">
+              <div className="relative mx-auto max-w-md rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-5 backdrop-blur-xl shadow-2xl">
+                <div className="mb-4 flex items-center justify-between text-xs text-slate-300">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-green-400" />
+                    Projets en cours
+                  </span>
+                  <span className="text-slate-400">Next.js · Supabase</span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="rounded-2xl bg-slate-950/60 p-4 ring-1 ring-white/5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          E-commerce
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-white">
+                          Armor Café – Boutique en ligne
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                        En production
+                      </span>
+                    </div>
+                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+                      <div className="h-full w-[82%] bg-gradient-to-r from-secondary to-primary" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs text-slate-200">
+                    <div className="rounded-2xl bg-slate-950/60 p-3 ring-1 ring-white/5">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                        SEO / Performance
+                      </p>
+                      <p className="mt-1 text-lg font-bold text-white">
+                        96
+                        <span className="ml-1 text-xs text-emerald-400">
+                          /100
+                        </span>
+                      </p>
+                      <p className="mt-1 text-[11px] text-slate-400">
+                        Score moyen Lighthouse
+                      </p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-950/60 p-3 ring-1 ring-white/5">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                        Taux de conversion
+                      </p>
+                      <p className="mt-1 text-lg font-bold text-white">
+                        +38%
+                      </p>
+                      <p className="mt-1 text-[11px] text-slate-400">
+                        En moyenne après refonte
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-bold mb-2">Téléphone</h3>
-              <a href={`tel:${demoSettings.phone}`} className="text-gray-400 hover:text-white transition-colors">
-                {demoSettings.phone}
+            </div>
+          </div>
+
+          <div className="absolute bottom-10 left-1/2 hidden -translate-x-1/2 md:block">
+            <div className="flex flex-col items-center gap-3 text-xs text-slate-300">
+              <span>Faites défiler</span>
+              <div className="flex h-10 w-6 items-start justify-center rounded-full border border-white/25 p-1.5">
+                <div className="h-3 w-1.5 animate-bounce rounded-full bg-white/80" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* STATS */}
+        <section className="relative -mt-16 z-20 px-6 pb-10">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 md:grid-cols-4">
+            {[
+              {
+                icon: Zap,
+                value: stats.projects,
+                label: 'Projets livrés',
+              },
+              {
+                icon: Users,
+                value: stats.clients,
+                label: 'Clients accompagnés',
+              },
+              {
+                icon: Star,
+                value: stats.satisfaction,
+                label: 'Note moyenne',
+              },
+              {
+                icon: TrendingUp,
+                value: stats.years,
+                label: "Années d'expérience",
+              },
+            ].map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={stat.label}
+                  className="group rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur-xl shadow-lg transition-all hover:-translate-y-1 hover:border-secondary/60 hover:shadow-2xl"
+                  style={{ transitionDelay: `${index * 50}ms` }}
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <Sparkles className="h-4 w-4 text-secondary opacity-0 transition-opacity group-hover:opacity-100" />
+                  </div>
+                  <div className="text-2xl font-black text-white md:text-3xl">
+                    {stat.value}
+                    {stat.label === 'Note moyenne' && (
+                      <span className="ml-1 text-sm text-slate-400">/5</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
+                    {stat.label}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* SERVICES */}
+        <section
+          id="services"
+          className="px-6 py-20 md:py-24 bg-slate-950/60 border-y border-white/5"
+        >
+          <div className="mx-auto flex max-w-6xl flex-col gap-12 md:flex-row md:items-start">
+            <div className="md:w-1/3">
+              <h2 className="font-heading text-3xl font-bold text-white md:text-4xl">
+                Des offres pensées pour
+                <span className="block bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
+                  chaque étape de votre croissance.
+                </span>
+              </h2>
+              <p className="mt-4 text-sm text-slate-300 md:text-base">
+                Que vous lanciez votre activité ou que vous souhaitiez
+                scaler un business existant, nous concevons une
+                présence digitale alignée sur vos objectifs.
+              </p>
+              <ul className="mt-6 space-y-2 text-sm text-slate-300">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-secondary" />
+                  Sites vitrines, e-commerce, applications web
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-secondary" />
+                  Design sur-mesure, pas de templates recyclés
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-secondary" />
+                  Suivi & accompagnement après le lancement
+                </li>
+              </ul>
+            </div>
+
+            <div className="md:w-2/3">
+              <div className="grid gap-6 md:grid-cols-2">
+                {services.map((service) => {
+                  const Icon = service.icon;
+                  return (
+                    <div
+                      key={service.title}
+                      className="group flex h-full flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-950/80 p-6 shadow-lg transition-all hover:-translate-y-1 hover:border-secondary/70 hover:shadow-2xl"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-slate-200">
+                          {service.tag}
+                        </span>
+                      </div>
+                      <h3 className="mt-4 font-heading text-lg font-semibold text-white md:text-xl">
+                        {service.title}
+                      </h3>
+                      <p className="mt-3 flex-1 text-sm text-slate-300">
+                        {service.description}
+                      </p>
+                      <a
+                        href={`/offres#${service.id}`}
+                        className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-secondary transition group-hover:text-white"
+                      >
+                        Découvrir l’offre
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* PROCESS */}
+        <section
+          id="process"
+          className="px-6 py-20 md:py-24 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900"
+        >
+          <div className="mx-auto max-w-6xl">
+            <div className="text-center">
+              <h2 className="font-heading text-3xl font-bold text-white md:text-4xl">
+                Un processus clair,
+                <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
+                  {' '}
+                  sans jargon.
+                </span>
+              </h2>
+              <p className="mt-3 text-sm text-slate-300 md:text-base">
+                Nous vous guidons pas à pas, de la première idée au
+                lancement, avec une méthodologie éprouvée.
+              </p>
+            </div>
+
+            <div className="mt-12 overflow-x-auto pb-4">
+              <div className="flex min-w-full items-stretch gap-6 md:grid md:grid-cols-4 md:gap-6">
+                {processSteps.map((step, index) => (
+                  <div
+                    key={step.title}
+                    className="group relative flex min-w-[240px] flex-col rounded-2xl border border-white/10 bg-slate-950/70 p-5 backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-secondary/70 hover:shadow-2xl"
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-slate-300">
+                        <span className="text-slate-400">Étape</span>
+                        <span className="font-semibold text-secondary">
+                          0{index + 1}
+                        </span>
+                      </div>
+                      <div className="h-7 w-7 rounded-full border border-white/15 bg-white/5 text-[11px] font-semibold text-slate-200 flex items-center justify-center">
+                        {index === 0 && 'Brief'}
+                        {index === 1 && 'UX/UI'}
+                        {index === 2 && 'Dev'}
+                        {index === 3 && 'Go live'}
+                      </div>
+                    </div>
+                    <h3 className="font-heading text-base font-semibold text-white md:text-lg">
+                      {step.title}
+                    </h3>
+                    <p className="mt-2 text-xs text-slate-300 md:text-sm">
+                      {step.description}
+                    </p>
+                    {index < processSteps.length - 1 && (
+                      <div className="pointer-events-none absolute inset-y-1 -right-4 hidden items-center md:flex">
+                        <div className="h-px w-6 bg-gradient-to-r from-secondary/70 to-transparent" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* PORTFOLIO HIGHLIGHTS */}
+        <section
+          id="portfolio"
+          className="px-6 py-20 md:py-24 bg-slate-900/95 border-y border-white/5"
+        >
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+              <div>
+                <h2 className="font-heading text-3xl font-bold text-white md:text-4xl">
+                  Quelques projets
+                  <span className="block bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
+                    qui parlent pour nous.
+                  </span>
+                </h2>
+                <p className="mt-3 max-w-xl text-sm text-slate-300 md:text-base">
+                  Une sélection de réalisations menées pour des acteurs
+                  locaux et nationaux, avec des résultats mesurables.
+                </p>
+              </div>
+              <a
+                href="/portfolio"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-xs font-medium text-slate-100 backdrop-blur transition hover:bg-white/10"
+              >
+                Voir tout le portfolio
+                <ArrowRight className="h-3.5 w-3.5" />
               </a>
             </div>
 
-            <div className="text-center group hover:scale-105 transition-transform duration-300">
-              <div className="inline-block p-4 bg-yellow-600/20 rounded-2xl mb-4 group-hover:bg-yellow-600/30 transition-colors">
-                <Clock className="w-10 h-10 text-yellow-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Horaires</h3>
-              <p className="text-gray-400">
-                Lun-Dim: 12h-14h30<br/>
-                19h-22h30
-              </p>
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {portfolioHighlights.map((project) => (
+                <article
+                  key={project.title}
+                  className="group flex h-full flex-col rounded-2xl border border-white/10 bg-slate-950/80 p-5 shadow-lg transition-all hover:-translate-y-1 hover:border-secondary/70 hover:shadow-2xl"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
+                      {project.category}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {project.tech.join(' · ')}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 font-heading text-base font-semibold text-white md:text-lg">
+                    {project.title}
+                  </h3>
+                  <p className="mt-2 flex-1 text-xs text-slate-300 md:text-sm">
+                    {project.description}
+                  </p>
+                  <button className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-secondary transition group-hover:text-white">
+                    Voir le cas client
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                  </button>
+                </article>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA Final Minimaliste */}
-      <section className="py-24 px-6 bg-gradient-to-br from-red-600 to-orange-600 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 right-10 w-72 h-72 bg-pink-300 rounded-full blur-3xl"></div>
-        </div>
+        {/* TESTIMONIALS + STATS BLOCK */}
+        <section
+          id="temoignages"
+          className="px-6 py-20 md:py-24 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900"
+        >
+          <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)] md:items-center">
+            <div>
+              <h2 className="font-heading text-3xl font-bold text-white md:text-4xl">
+                Ils nous font confiance.
+              </h2>
+              <p className="mt-3 text-sm text-slate-300 md:text-base">
+                Nous construisons des relations durables avec nos clients,
+                basées sur la transparence, la pédagogie et les résultats.
+              </p>
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <Star className="w-16 h-16 mx-auto text-yellow-300 mb-6" fill="currentColor" />
-          
-          <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
-            Réservez Votre Table
-          </h2>
-          
-          <p className="text-xl text-white/95 mb-10 max-w-2xl mx-auto">
-            Vivez une expérience culinaire inoubliable dans notre restaurant étoilé
-          </p>
+              <div className="mt-8 rounded-3xl border border-white/15 bg-slate-950/80 p-6 backdrop-blur-xl shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-amber-300">
+                    <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
+                    <span>4,9 / 5 sur les retours clients</span>
+                  </div>
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        aria-label={`Afficher le témoignage ${index + 1}`}
+                        onClick={() => setCurrentTestimonial(index)}
+                        className={`h-1.5 w-5 rounded-full transition ${
+                          currentTestimonial === index
+                            ? 'bg-secondary'
+                            : 'bg-white/15 hover:bg-white/30'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/reservation"
-              className="group px-10 py-4 bg-white text-red-600 rounded-full font-bold text-lg shadow-2xl hover:shadow-white/20 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
-            >
-              <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              Réserver maintenant
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </a>
+                <div className="mt-6">
+                  <p className="text-sm text-slate-100 md:text-base">
+                    “{testimonials[currentTestimonial].quote}”
+                  </p>
+                  <div className="mt-4 text-sm font-medium text-white">
+                    {testimonials[currentTestimonial].name}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {testimonials[currentTestimonial].role}
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <a
-              href="/categories"
-              className="px-10 py-4 bg-transparent border-3 border-white text-white rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all duration-300"
-            >
-              Découvrir la carte
-            </a>
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-white/15 bg-white/5 p-5 text-slate-100 backdrop-blur-xl shadow-2xl">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-200">
+                  Engagement qualité
+                </p>
+                <p className="mt-2 text-sm text-slate-100">
+                  Chaque projet fait l’objet d’un contrôle qualité
+                  approfondi : performance, accessibilité, SEO et sécurité.
+                </p>
+                <ul className="mt-4 space-y-2 text-xs text-slate-200">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-secondary" />
+                    Audit Lighthouse complet avant mise en ligne
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-secondary" />
+                    Code revu et testé sur les principaux navigateurs
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-secondary" />
+                    Support technique après lancement
+                  </li>
+                </ul>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs text-slate-200">
+                <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                    Taux de recommandation
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-white">94%</p>
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    clients prêts à nous recommander
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                    Délai moyen de livraison
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-white">
+                    6-8
+                    <span className="ml-1 text-sm text-slate-400">
+                      semaines
+                    </span>
+                  </p>
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    pour un site vitrine complet
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <Footer settings={demoSettings} />
+        {/* FINAL CTA */}
+        <section
+          id="cta"
+          className="relative overflow-hidden bg-gradient-to-br from-primary via-secondary to-accent px-6 py-20 md:py-24"
+        >
+          <div className="pointer-events-none absolute inset-0 opacity-40">
+            <div className="absolute -top-32 -left-20 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
+            <div className="absolute -bottom-32 -right-16 h-72 w-72 rounded-full bg-slate-900/40 blur-3xl" />
+          </div>
 
-      <style jsx global>{`
-        @keyframes floatParticle {
-          0%, 100% {
-            transform: translateY(0) translateX(0);
-            opacity: 0.2;
+          <div className="relative mx-auto flex max-w-4xl flex-col items-center text-center text-white">
+            <Star className="h-10 w-10 md:h-12 md:w-12" />
+            <h2 className="mt-4 font-heading text-3xl font-black md:text-4xl">
+              Prêt à lancer votre prochain projet web ?
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm md:text-base">
+              Partagez-nous vos objectifs, vos contraintes et vos idées.
+              Nous revenons vers vous sous 24h avec une première
+              proposition d’accompagnement et un créneau de rendez-vous.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <a
+                href="/reservation"
+                className="group inline-flex items-center justify-center gap-3 rounded-full bg-slate-950 px-8 py-3 text-sm font-semibold text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-slate-900"
+              >
+                Réserver un appel découverte
+                <Calendar className="h-4 w-4 transition-transform group-hover:-rotate-3" />
+              </a>
+              <a
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-full border border-white/60 bg-white/10 px-8 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
+              >
+                Nous écrire un message
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <Footer settings={demoSettings} />
+
+        <style jsx global>{`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(8px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
-          50% {
-            transform: translateY(-100px) translateX(20px);
-            opacity: 0.8;
-          }
-        }
-      `}</style>
-    </div>
+        `}</style>
+      </div>
+    </>
   );
 }

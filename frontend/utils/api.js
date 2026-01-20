@@ -1,14 +1,45 @@
-// frontend/utils/api.js
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// frontend/utils/api.js - VERSION JWT
 
-// Helper fetch avec gestion d'erreurs
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// ============================================
+// GESTION DU TOKEN JWT
+// ============================================
+
+const TOKEN_KEY = 'auth_token';
+
+const getToken = () => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+};
+
+const setToken = (token) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(TOKEN_KEY, token);
+};
+
+const removeToken = () => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(TOKEN_KEY);
+};
+
+// ============================================
+// FONCTION FETCH API
+// ============================================
+
 const fetchAPI = async (endpoint, options = {}) => {
+  const token = getToken();
+  
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include', // Pour envoyer les cookies de session
   };
+
+  // Ajouter le token si disponible
+  if (token) {
+    defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+  }
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -22,6 +53,14 @@ const fetchAPI = async (endpoint, options = {}) => {
 
     const data = await response.json();
 
+    // Si le token est expiré, déconnecter
+    if (response.status === 401 && data.error?.includes('Token')) {
+      removeToken();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
+
     if (!response.ok) {
       throw new Error(data.error || 'Une erreur est survenue');
     }
@@ -34,46 +73,95 @@ const fetchAPI = async (endpoint, options = {}) => {
 };
 
 // ============================================
-// AUTH API
+// AUTH API - VERSION JWT
 // ============================================
 
 export const login = async (credentials) => {
-  return fetchAPI('/auth/login', {
+  const data = await fetchAPI('/auth/login', {
     method: 'POST',
     body: JSON.stringify(credentials),
   });
+  
+  // Sauvegarder le token
+  if (data.token) {
+    setToken(data.token);
+  }
+  
+  return data;
 };
 
 export const register = async (userData) => {
-  return fetchAPI('/auth/register', {
+  const data = await fetchAPI('/auth/register', {
     method: 'POST',
     body: JSON.stringify(userData),
   });
+  
+  // Sauvegarder le token
+  if (data.token) {
+    setToken(data.token);
+  }
+  
+  return data;
 };
 
 export const logout = async () => {
-  return fetchAPI('/auth/logout', {
-    method: 'POST',
-  });
-};
-
-export const checkAuth = async () => {
   try {
-    return await fetchAPI('/auth/me');
+    await fetchAPI('/auth/logout', {
+      method: 'POST',
+    });
   } catch (error) {
-    return { user: null };
+    console.error('Erreur logout:', error);
+  } finally {
+    // Toujours supprimer le token
+    removeToken();
   }
 };
 
-export const checkAuthStatus = async () => {
-  return fetchAPI('/auth/check');
+export const checkAuth = async () => {
+  const token = getToken();
+  
+  if (!token) {
+    return { 
+      authenticated: false,
+      user: null 
+    };
+  }
+  
+  try {
+    const response = await fetchAPI('/auth/me');
+    return {
+      authenticated: true,
+      user: response.user
+    };
+  } catch (error) {
+    removeToken();
+    return { 
+      authenticated: false,
+      user: null 
+    };
+  }
 };
 
+export const refreshToken = async () => {
+  try {
+    const data = await fetchAPI('/auth/refresh', {
+      method: 'POST',
+    });
+    
+    if (data.token) {
+      setToken(data.token);
+    }
+    
+    return data;
+  } catch (error) {
+    removeToken();
+    throw error;
+  }
+};
 
 // ============================================
 // USERS API
 // ============================================
-
 
 export const updateUserProfile = async (userData) => {
   return fetchAPI('/users/profile', {
@@ -95,15 +183,6 @@ export const deleteAccount = async () => {
   });
 };
 
-
-
-
-
-
-
-
-
-
 export const getUserProfile = async () => {
   return fetchAPI('/users/profile');
 };
@@ -114,8 +193,6 @@ export const updateProfile = async (userData) => {
     body: JSON.stringify(userData),
   });
 };
-
-
 
 export const getUserStats = async () => {
   return fetchAPI('/users/stats');
@@ -191,31 +268,19 @@ export const fetchDishesByCategory = async (categoryId) => {
 // MENUS API
 // ============================================
 
-/**
- * Récupère tous les menus actifs avec leurs plats
- */
 export async function fetchMenus() {
   return fetchAPI('/menus');
 }
 
-/**
- * Récupère un menu spécifique par ID
- */
 export async function fetchMenuById(id) {
   const response = await fetchAPI(`/menus/${id}`);
   return response.menu;
 }
 
-/**
- * Récupère les menus par type
- */
 export async function fetchMenusByType(type) {
   return fetchAPI(`/menus/type/${type}`);
 }
 
-/**
- * Créer un nouveau menu (admin)
- */
 export async function createMenu(menuData) {
   return fetchAPI('/menus', {
     method: 'POST',
@@ -223,9 +288,6 @@ export async function createMenu(menuData) {
   });
 }
 
-/**
- * Mettre à jour un menu (admin)
- */
 export async function updateMenu(id, menuData) {
   return fetchAPI(`/menus/${id}`, {
     method: 'PUT',
@@ -233,9 +295,6 @@ export async function updateMenu(id, menuData) {
   });
 }
 
-/**
- * Supprimer un menu (admin)
- */
 export async function deleteMenu(id) {
   return fetchAPI(`/menus/${id}`, {
     method: 'DELETE',
@@ -245,8 +304,6 @@ export async function deleteMenu(id) {
 // ============================================
 // RESERVATIONS API
 // ============================================
-
-
 
 export const createReservation = async (reservationData) => {
   try {
@@ -310,10 +367,6 @@ export const checkAvailability = async (reservationData) => {
   }
 };
 
-
-
-
-
 export const fetchUserReservations = async () => {
   return fetchAPI('/reservations/my');
 };
@@ -329,14 +382,19 @@ export const updateReservation = async (id, reservationData) => {
   });
 };
 
-
+export const deleteReservation = async (id) => {
+  return fetchAPI(`/reservations/${id}`, {
+    method: 'DELETE',
+  });
+};
 
 // ============================================
 // FAVORITES API
 // ============================================
 
 export const fetchFavorites = async () => {
-  return fetchAPI('/favorites');
+  const response = await fetchAPI('/favorites');
+  return response;
 };
 
 export const addFavorite = async (dishId) => {
@@ -352,8 +410,14 @@ export const removeFavorite = async (dishId) => {
   });
 };
 
-export const isFavorite = async (dishId) => {
-  return fetchAPI(`/favorites/${dishId}/check`);
+export const checkIsFavorite = async (dishId) => {
+  const response = await fetchAPI(`/favorites/check/${dishId}`);
+  return response.isFavorite;
+};
+
+export const getFavoritesCount = async () => {
+  const response = await fetchAPI('/favorites/count');
+  return response.count;
 };
 
 // ============================================
